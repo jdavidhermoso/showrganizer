@@ -1,0 +1,9 @@
+RewriteEngine On
+
+# Forzar HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Eliminar www
+RewriteCond %{HTTP_HOST} ^www\.standupcomedy\.es [NC]
+RewriteRule ^ https://standupcomedy.es%{REQUEST_URI} [L,R=301]

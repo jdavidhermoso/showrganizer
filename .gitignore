@@ -1,0 +1,9 @@
+.DS_Store
+
+# User data and tokens — never commit these
+data/users/
+data/tokens.json
+data/drive_config.json
+
+# Real config with secrets — never commit this
+includes/config.php
