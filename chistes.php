@@ -58,7 +58,10 @@ include __DIR__ . '/includes/header.php';
         <div class="chiste-tags"></div>
         <div class="chiste-card-footer">
             <span class="estado"></span>
-            <a href="" class="btn btn-ghost btn-sm">Editar</a>
+            <div class="card-actions">
+                <button class="btn btn-ghost btn-sm share-btn" title="Compartir">↗</button>
+                <a href="" class="btn btn-ghost btn-sm">Editar</a>
+            </div>
         </div>
     </article>
 </template>

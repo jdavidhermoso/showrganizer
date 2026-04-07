@@ -73,6 +73,9 @@
         const editLink = node.querySelector('a.btn');
         editLink.href = BASE_URL + '/chiste_form.php?id=' + j.id;
 
+        const shareBtn = node.querySelector('.share-btn');
+        shareBtn.addEventListener('click', () => shareJoke(j.texto));
+
         return node;
     }
 
@@ -105,6 +108,14 @@
         fText.value = ''; fEstado.value = ''; fCat.value = ''; fPun.value = '';
         renderList(allJokes);
     });
+
+    function shareJoke(texto) {
+        if (navigator.share) {
+            navigator.share({ text: texto }).catch(() => {});
+        } else {
+            window.open('https://www.threads.net/intent/post?text=' + encodeURIComponent(texto), '_blank');
+        }
+    }
 
     function starsHtml(n) {
         if (n == null) return '<span class="stars empty">—</span>';

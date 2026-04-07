@@ -24,6 +24,7 @@ $page_title = $show ? h($show['titulo']) : 'Nuevo show';
     <title><?= $page_title ?> · <?= APP_NAME ?></title>
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/main.css">
     <script>(function(){var t=localStorage.getItem('theme');if(t==='light')document.documentElement.classList.add('light');}());</script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 </head>
 <body class="editor-body">
 
@@ -36,9 +37,6 @@ $page_title = $show ? h($show['titulo']) : 'Nuevo show';
     <button class="theme-toggle" id="theme-toggle-editor" aria-label="Cambiar tema">☀️</button>
     <div class="editor-topbar-right">
         <span id="save-status" class="save-status"></span>
-        <?php if ($id): ?>
-        <a href="<?= BASE_URL ?>/show_print.php?id=<?= h($id) ?>" target="_blank" class="btn btn-ghost pdf-btn">PDF</a>
-        <?php endif; ?>
         <button id="save-btn" class="btn btn-primary">Guardar</button>
     </div>
 </div>
@@ -64,18 +62,46 @@ $page_title = $show ? h($show['titulo']) : 'Nuevo show';
     </aside>
 
     <section class="editor-document">
+        <div class="doc-add-bar">
+            <button class="btn btn-ghost btn-sm" id="add-text-bottom">+ Texto</button>
+            <button id="chart-toggle" class="btn btn-ghost btn-sm" title="Ver arco del show">Aplausos esperados</button>
+            <?php if ($id): ?>
+            <a href="<?= BASE_URL ?>/show_print.php?id=<?= h($id) ?>" target="_blank" class="btn btn-ghost btn-sm">PDF</a>
+            <?php endif; ?>
+        </div>
         <div id="document-blocks" class="document-blocks">
             <div class="doc-empty-state" id="doc-empty">
                 <p>Arrastra chistes desde el panel o <button class="link-btn" id="add-first-text">escribe algo</button>.</p>
             </div>
         </div>
-        <div class="doc-add-bar">
-            <button class="btn btn-ghost btn-sm" id="add-text-bottom">+ Texto</button>
-            <?php if ($id): ?>
-            <a href="<?= BASE_URL ?>/show_print.php?id=<?= h($id) ?>" target="_blank" class="btn btn-ghost btn-sm pdf-btn-mobile">PDF</a>
-            <?php endif; ?>
-        </div>
     </section>
+</div>
+
+<div id="joke-popup-overlay" class="modal-overlay" style="display:none">
+    <div class="modal-box joke-popup-box">
+        <div class="joke-popup-header">
+            <span id="joke-popup-cat" class="joke-block-category"></span>
+            <span id="joke-popup-stars" class="joke-block-rating"></span>
+            <span id="joke-popup-estado" class="estado"></span>
+        </div>
+        <p id="joke-popup-texto" class="joke-popup-texto"></p>
+        <div id="joke-popup-tags" class="joke-block-tags"></div>
+        <div class="modal-actions">
+            <button id="joke-popup-close" class="btn btn-ghost">✕ Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<div id="chart-overlay" class="chart-overlay"></div>
+<div id="chart-panel" class="chart-panel">
+    <div id="chart-resize-handle" class="chart-resize-handle"></div>
+    <div class="chart-panel-inner">
+        <div class="chart-panel-topbar">
+            <span class="chart-panel-label">Aplausos esperados — puntuación por chiste</span>
+            <button id="chart-panel-close" class="btn btn-ghost btn-sm">✕ Cerrar</button>
+        </div>
+        <canvas id="show-chart"></canvas>
+    </div>
 </div>
 
 <script>

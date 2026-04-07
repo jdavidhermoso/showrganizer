@@ -87,7 +87,7 @@
             tags:       tags,
         };
 
-        const id     = parseInt(form.dataset.id);
+        const id     = form.dataset.id || '';
         const url    = BASE_URL + '/api/chistes.php' + (id ? '?id=' + id : '');
         const method = id ? 'PUT' : 'POST';
 
@@ -121,7 +121,7 @@
     if (delBtn) {
         delBtn.addEventListener('click', async () => {
             if (!confirm('¿Eliminar este chiste? Esta acción no se puede deshacer.')) return;
-            const id  = parseInt(form.dataset.id);
+            const id  = form.dataset.id || '';
             const res = await fetch(BASE_URL + '/api/chistes.php?id=' + id, { method: 'DELETE' });
             if (res.ok) window.location.href = BASE_URL + '/chistes.php';
         });

@@ -54,41 +54,45 @@ if ($method === 'GET') {
     json_response(array_values($all));
 }
 
-if ($method === 'POST') {
-    $data  = get_request_body();
-    $texto = trim($data['texto'] ?? '');
-    if ($texto === '') json_error('El texto es obligatorio');
+try {
+    if ($method === 'POST') {
+        $data  = get_request_body();
+        $texto = trim($data['texto'] ?? '');
+        if ($texto === '') json_error('El texto es obligatorio');
 
-    $id = $gs->appendChisteWithTags([
-        'texto'      => $texto,
-        'categoria'  => $data['categoria'] ?? '',
-        'puntuacion' => $data['puntuacion'] ?? null,
-        'estado'     => $data['estado']    ?? 'borrador',
-        'tags'       => $data['tags']      ?? [],
-    ]);
-    json_response(['id' => $id], 201);
-}
+        $id = $gs->appendChisteWithTags([
+            'texto'      => $texto,
+            'categoria'  => $data['categoria'] ?? '',
+            'puntuacion' => $data['puntuacion'] ?? null,
+            'estado'     => $data['estado']    ?? 'borrador',
+            'tags'       => $data['tags']      ?? [],
+        ]);
+        json_response(['id' => $id], 201);
+    }
 
-if ($method === 'PUT') {
-    if (!$id) json_error('ID requerido');
-    $data  = get_request_body();
-    $texto = trim($data['texto'] ?? '');
-    if ($texto === '') json_error('El texto es obligatorio');
+    if ($method === 'PUT') {
+        if (!$id) json_error('ID requerido');
+        $data  = get_request_body();
+        $texto = trim($data['texto'] ?? '');
+        if ($texto === '') json_error('El texto es obligatorio');
 
-    $gs->updateChisteWithTags($id, [
-        'texto'      => $texto,
-        'categoria'  => $data['categoria'] ?? '',
-        'puntuacion' => $data['puntuacion'] ?? null,
-        'estado'     => $data['estado']    ?? 'borrador',
-        'tags'       => $data['tags']      ?? [],
-    ]);
-    json_response(['ok' => true]);
-}
+        $gs->updateChisteWithTags($id, [
+            'texto'      => $texto,
+            'categoria'  => $data['categoria'] ?? '',
+            'puntuacion' => $data['puntuacion'] ?? null,
+            'estado'     => $data['estado']    ?? 'borrador',
+            'tags'       => $data['tags']      ?? [],
+        ]);
+        json_response(['ok' => true]);
+    }
 
-if ($method === 'DELETE') {
-    if (!$id) json_error('ID requerido');
-    $gs->deleteChiste($id);
-    json_response(['ok' => true]);
+    if ($method === 'DELETE') {
+        if (!$id) json_error('ID requerido');
+        $gs->deleteChiste($id);
+        json_response(['ok' => true]);
+    }
+} catch (RuntimeException $e) {
+    json_error($e->getMessage(), 500);
 }
 
 json_error('Método no permitido', 405);

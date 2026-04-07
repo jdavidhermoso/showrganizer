@@ -47,17 +47,29 @@ $current = basename($_SERVER['PHP_SELF'], '.php');
             <button id="global-composer-close" class="modal-close-btn">×</button>
         </div>
         <textarea id="global-composer-texto" placeholder="¿De qué va el chiste?" rows="4" autocomplete="off"></textarea>
+        <div class="composer-meta">
+            <select id="global-composer-cat" class="filter-select">
+                <option value="">Sin categoría</option>
+            </select>
+            <select id="global-composer-estado" class="filter-select">
+                <option value="borrador">Borrador</option>
+                <option value="desarrollo">En desarrollo</option>
+                <option value="probado">Probado</option>
+            </select>
+        </div>
+        <div class="composer-stars" id="global-composer-stars-input" data-value="0">
+            <span class="star-btn">★</span>
+            <span class="star-btn">★</span>
+            <span class="star-btn">★</span>
+            <span class="star-btn">★</span>
+            <span class="star-btn">★</span>
+            <span class="star-clear" title="Sin puntuar">×</span>
+        </div>
+        <input type="hidden" id="global-composer-puntuacion" value="">
+        <div class="tags-field" id="global-composer-tags-field">
+            <input type="text" id="global-composer-tags-input" placeholder="Tags (Enter para añadir)..." autocomplete="off">
+        </div>
         <div class="composer-footer">
-            <div class="composer-meta">
-                <select id="global-composer-cat" class="filter-select">
-                    <option value="">Sin categoría</option>
-                </select>
-                <select id="global-composer-estado" class="filter-select">
-                    <option value="borrador">Borrador</option>
-                    <option value="desarrollo">En desarrollo</option>
-                    <option value="probado">Probado</option>
-                </select>
-            </div>
             <button id="global-composer-submit" class="btn btn-primary">Guardar</button>
         </div>
         <div id="global-composer-status" class="composer-status"></div>

@@ -5,6 +5,8 @@
     let allJokes  = [];
     let showId    = SHOW_ID;
     let saveTimer = null;
+    let chartInstance = null;
+    let chartOpen = false;
 
     const docBlocks     = document.getElementById('document-blocks');
     const docEmpty      = document.getElementById('doc-empty');
@@ -116,6 +118,8 @@
             docBlocks.appendChild(el);
         });
 
+        if (chartOpen) renderChart();
+
         if (focusedId) {
             const el = docBlocks.querySelector('[data-block-id="' + focusedId + '"] .text-block-content');
             if (el) el.focus();
@@ -170,6 +174,29 @@
                     (joke.tags && joke.tags.length
                         ? '<div class="joke-block-tags">' + joke.tags.map(t => '<span class="tag">' + escHtml(t) + '</span>').join('') + '</div>'
                         : '');
+
+                const realRow = document.createElement('div');
+                realRow.className = 'joke-block-real-row';
+                const realLabel = document.createElement('span');
+                realLabel.className = 'real-rating-label';
+                realLabel.textContent = 'Real:';
+                realRow.appendChild(realLabel);
+
+                for (let i = 1; i <= 5; i++) {
+                    const star = document.createElement('span');
+                    star.className = 'real-star';
+                    star.dataset.val = i;
+                    star.textContent = (block.estrellas_reales != null && i <= block.estrellas_reales) ? '★' : '☆';
+                    star.addEventListener('click', () => {
+                        block.estrellas_reales = block.estrellas_reales === i ? null : i;
+                        syncRealStars(realRow, block.estrellas_reales);
+                        scheduleSave();
+                        if (chartOpen) renderChart();
+                    });
+                    realRow.appendChild(star);
+                }
+
+                jDiv.appendChild(realRow);
             } else {
                 jDiv.innerHTML = '<em style="color:var(--text-muted)">Chiste #' + block.joke_id + ' (no encontrado)</em>';
             }
@@ -242,11 +269,16 @@
 
         div.draggable = true;
 
+        let dragFromHandle = false;
+        handle.addEventListener('mousedown', () => { dragFromHandle = true; });
+        div.addEventListener('dragend',   () => { dragFromHandle = false; });
+
         div.addEventListener('dragstart', e => {
-            if (!e.target.classList.contains('block-handle')) {
+            if (!dragFromHandle) {
                 e.preventDefault();
                 return;
             }
+            dragFromHandle = false;
             e.dataTransfer.setData('text/block-source', 'document');
             e.dataTransfer.setData('text/block-id', block.id);
             div.classList.add('dragging');
@@ -383,9 +415,15 @@
     }
 
     function serializeBlock(b) {
-        if (b.type === 'text')  return { id: b.id, type: 'text', content: b.content || '' };
-        if (b.type === 'joke')  return { id: b.id, type: 'joke', joke_id: b.joke_id };
+        if (b.type === 'text') return { id: b.id, type: 'text', content: b.content || '' };
+        if (b.type === 'joke') return { id: b.id, type: 'joke', joke_id: b.joke_id, estrellas_reales: b.estrellas_reales ?? null };
         return b;
+    }
+
+    function syncRealStars(container, val) {
+        container.querySelectorAll('.real-star').forEach((s, i) => {
+            s.textContent = (val != null && i + 1 <= val) ? '★' : '☆';
+        });
     }
 
     function setSaveStatus(cls, text) {
@@ -427,6 +465,184 @@
     function estadoLabel(e) {
         return { borrador: 'Borrador', desarrollo: 'En desarrollo', probado: 'Probado', retirado: 'Retirado' }[e] || e;
     }
+
+    const chartPanel  = document.getElementById('chart-panel');
+    const chartCanvas = document.getElementById('show-chart');
+    const chartToggle = document.getElementById('chart-toggle');
+
+    const jokePopupOverlay = document.getElementById('joke-popup-overlay');
+    const jokePopupClose   = document.getElementById('joke-popup-close');
+
+    function openJokePopup(joke) {
+        document.getElementById('joke-popup-cat').textContent    = joke.categoria || '—';
+        document.getElementById('joke-popup-stars').textContent  = joke.puntuacion != null ? '★'.repeat(joke.puntuacion) + '☆'.repeat(5 - joke.puntuacion) : '';
+        const estadoEl = document.getElementById('joke-popup-estado');
+        estadoEl.textContent  = estadoLabel(joke.estado);
+        estadoEl.className    = 'estado estado-' + joke.estado;
+        document.getElementById('joke-popup-texto').textContent  = joke.texto;
+        const tagsEl = document.getElementById('joke-popup-tags');
+        tagsEl.innerHTML = (joke.tags || []).map(t => '<span class="tag">' + escHtml(t) + '</span>').join('');
+        jokePopupOverlay.style.display = 'flex';
+    }
+
+    jokePopupClose.addEventListener('click', () => { jokePopupOverlay.style.display = 'none'; });
+    jokePopupOverlay.addEventListener('click', e => { if (e.target === jokePopupOverlay) jokePopupOverlay.style.display = 'none'; });
+
+    function getStyle(v) {
+        return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+    }
+
+    function renderChart() {
+        const jokeBlocks = blocks.filter(b => b.type === 'joke' && b.jokeData);
+        const labels = jokeBlocks.map(b => {
+            const t = b.jokeData.texto || '';
+            return t.length > 22 ? t.slice(0, 22) + '…' : t;
+        });
+        const data = jokeBlocks.map(b =>
+            b.jokeData.puntuacion != null ? b.jokeData.puntuacion : null
+        );
+
+        const accent    = getStyle('--accent');
+        const ok        = getStyle('--ok');
+        const textMuted = getStyle('--text-muted');
+        const border    = getStyle('--border');
+
+        const dataReal = jokeBlocks.map(b => b.estrellas_reales != null ? b.estrellas_reales : null);
+        const hasReal  = dataReal.some(v => v != null);
+
+        if (chartInstance) chartInstance.destroy();
+
+        chartInstance = new Chart(chartCanvas, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: 'Esperado',
+                        data,
+                        spanGaps: false,
+                        borderColor: accent,
+                        backgroundColor: accent + '22',
+                        pointBackgroundColor: accent,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        tension: 0.35,
+                        fill: true,
+                    },
+                    {
+                        label: 'Real',
+                        data: dataReal,
+                        spanGaps: false,
+                        borderColor: ok,
+                        backgroundColor: ok + '22',
+                        pointBackgroundColor: ok,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        tension: 0.35,
+                        fill: false,
+                        hidden: !hasReal,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                onClick: (e, elements) => {
+                    if (!elements.length) return;
+                    const idx  = elements[0].index;
+                    const joke = jokeBlocks[idx]?.jokeData;
+                    if (joke) openJokePopup(joke);
+                },
+                onHover: (e, elements) => {
+                    chartCanvas.style.cursor = elements.length ? 'pointer' : 'default';
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: { color: textMuted, boxWidth: 12, font: { size: 11 } },
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ctx.raw != null ? '★'.repeat(ctx.raw) + '☆'.repeat(5 - ctx.raw) : 'Sin puntuación',
+                        },
+                    },
+                },
+                scales: {
+                    y: {
+                        min: 0, max: 5,
+                        ticks: { display: false },
+                        grid: { color: border },
+                    },
+                    x: {
+                        ticks: { color: textMuted, maxRotation: 30 },
+                        grid: { color: border },
+                    },
+                },
+            },
+        });
+    }
+
+    const chartOverlay = document.getElementById('chart-overlay');
+
+    function closeChart() {
+        chartOpen = false;
+        chartPanel.classList.remove('open');
+        chartToggle.classList.remove('active');
+        chartPanel.style.height = '';
+        if (chartOverlay) chartOverlay.classList.remove('active');
+        if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+    }
+
+    chartToggle.addEventListener('click', () => {
+        chartOpen = !chartOpen;
+        chartPanel.classList.toggle('open', chartOpen);
+        chartToggle.classList.toggle('active', chartOpen);
+        if (chartOverlay) chartOverlay.classList.toggle('active', chartOpen);
+        if (chartOpen) {
+            requestAnimationFrame(renderChart);
+        } else {
+            closeChart();
+        }
+    });
+
+    if (chartOverlay) chartOverlay.addEventListener('click', closeChart);
+
+    const chartPanelClose = document.getElementById('chart-panel-close');
+    if (chartPanelClose) {
+        chartPanelClose.addEventListener('click', closeChart);
+        chartPanelClose.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            closeChart();
+        });
+    }
+
+    const resizeHandle = document.getElementById('chart-resize-handle');
+    let resizing = false;
+    let resizeStartY = 0;
+    let resizeStartH = 0;
+
+    resizeHandle.addEventListener('mousedown', e => {
+        if (!chartOpen) return;
+        resizing = true;
+        resizeStartY = e.clientY;
+        resizeStartH = chartPanel.offsetHeight;
+        chartPanel.classList.add('resizing');
+        e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', e => {
+        if (!resizing) return;
+        const delta = resizeStartY - e.clientY;
+        const newH  = Math.max(120, Math.min(600, resizeStartH + delta));
+        chartPanel.style.height = newH + 'px';
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (!resizing) return;
+        resizing = false;
+        chartPanel.classList.remove('resizing');
+        if (chartInstance) chartInstance.resize();
+    });
 
     init();
 }());
