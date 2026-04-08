@@ -23,7 +23,11 @@ $page_title = $show ? h($show['titulo']) : 'Nuevo show';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $page_title ?> · <?= APP_NAME ?></title>
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/main.css">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1a1d25">
+    <link rel="apple-touch-icon" href="/assets/logo-192.png">
     <script>(function(){var t=localStorage.getItem('theme');if(t==='light')document.documentElement.classList.add('light');}());</script>
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 </head>
 <body class="editor-body">

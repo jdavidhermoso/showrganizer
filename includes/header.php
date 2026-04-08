@@ -9,7 +9,11 @@ $current = basename($_SERVER['PHP_SELF'], '.php');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= h($title) ?></title>
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/main.css">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1a1d25">
+    <link rel="apple-touch-icon" href="/assets/logo-192.png">
     <script>(function(){var t=localStorage.getItem('theme');if(t==='light')document.documentElement.classList.add('light');}());</script>
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
 </head>
 <body>
 <nav class="navbar">

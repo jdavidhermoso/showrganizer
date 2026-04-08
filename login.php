@@ -17,6 +17,10 @@ $auth_url = generate_oauth_url();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login · <?= APP_NAME ?></title>
     <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1a1d25">
+    <link rel="apple-touch-icon" href="/assets/logo-192.png">
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
 </head>
 <body class="auth-body">
 <div class="auth-box">

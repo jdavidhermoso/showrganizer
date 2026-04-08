@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sin conexión · Showrganizer</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #111318;
+            --bg2: #1a1d25;
+            --border: #2e3240;
+            --text: #e2e4ea;
+            --text-muted: #7a7f92;
+            --accent: #f0a030;
+            --font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+        }
+        html.light {
+            --bg: #f4f5f8; --bg2: #ffffff; --border: #d0d4df;
+            --text: #1a1d26; --text-muted: #6b7280; --accent: #c87010;
+        }
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+        .box { max-width: 400px; }
+        img { width: 96px; height: 96px; object-fit: cover; object-position: center 10%; border-radius: 16px; margin-bottom: 1.5rem; }
+        h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem; }
+        p { color: var(--text-muted); margin-bottom: 2rem; line-height: 1.6; }
+        button {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 0.65rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        button:hover { opacity: 0.88; }
+    </style>
+    <script>(function(){ var t = localStorage.getItem('theme'); if (t === 'light') document.documentElement.classList.add('light'); }());</script>
+</head>
+<body>
+    <div class="box">
+        <img src="/assets/logo.webp" alt="Showrganizer">
+        <h1>Sin conexión</h1>
+        <p>Parece que no tienes conexión a internet. Conéctate para seguir usando Showrganizer.</p>
+        <button onclick="window.location.reload()">Reintentar</button>
+    </div>
+</body>
+</html>

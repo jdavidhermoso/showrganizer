@@ -1,0 +1,38 @@
+{
+    "name": "Showrganizer",
+    "short_name": "Showrganizer",
+    "description": "La herramienta para cómicos de stand-up. Organiza tus chistes, construye setlists y analiza tus shows.",
+    "start_url": "/dashboard.php",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "theme_color": "#1a1d25",
+    "background_color": "#111318",
+    "lang": "es",
+    "icons": [
+        {
+            "src": "/assets/logo-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/assets/logo-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Nuevo chiste",
+            "url": "/dashboard.php",
+            "icons": [{ "src": "/assets/logo-192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Shows",
+            "url": "/shows.php",
+            "icons": [{ "src": "/assets/logo-192.png", "sizes": "192x192" }]
+        }
+    ]
+}
