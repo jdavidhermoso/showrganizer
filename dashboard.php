@@ -28,34 +28,34 @@ include __DIR__ . '/includes/header.php';
 ?>
 
 <div class="composer">
-    <textarea id="composer-texto" placeholder="¿De qué va el chiste?" rows="3" autocomplete="off"></textarea>
+    <textarea id="composer-texto" placeholder="<?= h(t('dash_placeholder')) ?>" rows="3" autocomplete="off"></textarea>
     <div class="composer-meta">
         <select id="composer-cat" class="filter-select">
-            <option value="">Sin categoría</option>
+            <option value=""><?= h(t('no_category')) ?></option>
             <?php foreach ($cats as $cat): ?>
                 <option value="<?= h($cat) ?>"><?= h($cat) ?></option>
             <?php endforeach; ?>
         </select>
         <select id="composer-estado" class="filter-select">
-            <option value="borrador">Borrador</option>
-            <option value="desarrollo">En desarrollo</option>
-            <option value="probado">Probado</option>
-            <option value="rotacion">En rotación</option>
-            <option value="retirado">Retirado</option>
+            <option value="borrador"><?= h(t('status_draft')) ?></option>
+            <option value="desarrollo"><?= h(t('status_dev')) ?></option>
+            <option value="probado"><?= h(t('status_tested')) ?></option>
+            <option value="rotacion"><?= h(t('status_rotation')) ?></option>
+            <option value="retirado"><?= h(t('status_retired')) ?></option>
         </select>
-        <input type="number" id="composer-duracion" class="filter-select" min="0" step="0.5" placeholder="min" title="Duración en minutos" style="width:70px">
+        <input type="number" id="composer-duracion" class="filter-select" min="0" step="0.5" placeholder="min" title="<?= h(t('dash_duration_hint')) ?>" style="width:70px">
     </div>
     <div class="composer-stars-row">
         <div class="composer-stars" id="dash-stars-input" data-value="0">
             <span class="star-btn">★</span><span class="star-btn">★</span><span class="star-btn">★</span><span class="star-btn">★</span><span class="star-btn">★</span>
-            <span class="star-clear" title="Sin puntuar">×</span>
+            <span class="star-clear" title="<?= h(t('no_rating')) ?>">×</span>
         </div>
         <div class="tags-field" id="dash-tags-field" style="flex:1">
-            <input type="text" id="dash-tags-input" placeholder="Tags (Enter para añadir)..." autocomplete="off">
+            <input type="text" id="dash-tags-input" placeholder="<?= h(t('dash_tags_ph')) ?>" autocomplete="off">
         </div>
     </div>
     <div class="composer-footer">
-        <button id="composer-submit" class="btn btn-primary" onclick="quickPost()">Guardar</button>
+        <button id="composer-submit" class="btn btn-primary" onclick="quickPost()"><?= h(t('save')) ?></button>
     </div>
     <div id="composer-status" class="composer-status"></div>
 </div>
@@ -63,31 +63,31 @@ include __DIR__ . '/includes/header.php';
 <div class="stats-grid">
     <div class="stat-card">
         <span class="stat-number" id="stat-total"><?= $total_chistes ?></span>
-        <span class="stat-label">Chistes</span>
+        <span class="stat-label"><?= h(t('stat_jokes')) ?></span>
     </div>
     <div class="stat-card">
         <span class="stat-number"><?= $estados_map['probado'] ?? 0 ?></span>
-        <span class="stat-label">Probados</span>
+        <span class="stat-label"><?= h(t('stat_tested')) ?></span>
     </div>
     <div class="stat-card">
         <span class="stat-number"><?= $estados_map['desarrollo'] ?? 0 ?></span>
-        <span class="stat-label">En desarrollo</span>
+        <span class="stat-label"><?= h(t('stat_dev')) ?></span>
     </div>
     <div class="stat-card">
         <span class="stat-number"><?= $total_shows ?></span>
-        <span class="stat-label">Shows</span>
+        <span class="stat-label"><?= h(t('stat_shows')) ?></span>
     </div>
 </div>
 
 <div class="dashboard-cols">
     <section class="dashboard-col">
         <div class="section-header">
-            <h3>Últimos chistes</h3>
-            <a href="chistes.php">Ver todos</a>
+            <h3><?= h(t('latest_jokes')) ?></h3>
+            <a href="chistes.php"><?= h(t('see_all')) ?></a>
         </div>
         <ul class="item-list" id="feed-list">
             <?php if (empty($ultimos_chistes)): ?>
-                <li><p class="empty-state">Escribe tu primer chiste arriba.</p></li>
+                <li><p class="empty-state"><?= h(t('first_joke_hint')) ?></p></li>
             <?php else: ?>
                 <?php foreach ($ultimos_chistes as $c): ?>
                 <li class="item-list-row">
@@ -106,11 +106,11 @@ include __DIR__ . '/includes/header.php';
 
     <section class="dashboard-col">
         <div class="section-header">
-            <h3>Shows</h3>
-            <a href="shows.php">Ver todos</a>
+            <h3><?= h(t('nav_shows')) ?></h3>
+            <a href="shows.php"><?= h(t('see_all')) ?></a>
         </div>
         <?php if (empty($ultimos_shows)): ?>
-            <p class="empty-state">Aún no hay shows.</p>
+            <p class="empty-state"><?= h(t('no_shows_yet')) ?></p>
         <?php else: ?>
             <ul class="item-list">
                 <?php foreach ($ultimos_shows as $s): ?>
@@ -122,18 +122,18 @@ include __DIR__ . '/includes/header.php';
             </ul>
         <?php endif; ?>
         <div style="margin-top:0.75rem">
-            <button onclick="nuevoShow()" class="btn btn-ghost btn-sm">+ Nuevo show</button>
+            <button onclick="nuevoShow()" class="btn btn-ghost btn-sm">+ <?= h(t('new_show')) ?></button>
         </div>
     </section>
 </div>
 
 <div id="show-modal-overlay" class="modal-overlay" style="display:none">
     <div class="modal-box">
-        <h3>Nuevo show</h3>
-        <input type="text" id="modal-input" placeholder="Título del show..." maxlength="255" autocomplete="off">
+        <h3><?= h(t('new_show')) ?></h3>
+        <input type="text" id="modal-input" placeholder="<?= h(t('show_title_ph')) ?>" maxlength="255" autocomplete="off">
         <div class="modal-actions">
-            <button class="btn btn-ghost" id="modal-cancel">Cancelar</button>
-            <button class="btn btn-primary" id="modal-confirm">Crear</button>
+            <button class="btn btn-ghost" id="modal-cancel"><?= h(t('cancel')) ?></button>
+            <button class="btn btn-primary" id="modal-confirm"><?= h(t('create')) ?></button>
         </div>
     </div>
 </div>
@@ -182,7 +182,7 @@ include __DIR__ . '/includes/header.php';
 
     window.quickPost = async function() {
         const texto = document.getElementById('composer-texto').value.trim();
-        if (!texto) { flashStatus('Escribe algo primero.', 'err'); return; }
+        if (!texto) { flashStatus(LANG.composer_write_first, 'err'); return; }
         const btn    = document.getElementById('composer-submit');
         btn.disabled = true;
         const cat    = document.getElementById('composer-cat').value;
@@ -222,7 +222,7 @@ include __DIR__ . '/includes/header.php';
         list.querySelector('.empty-state')?.closest('li')?.remove();
         list.prepend(li);
         document.getElementById('stat-total').textContent = parseInt(document.getElementById('stat-total').textContent) + 1;
-        flashStatus('✓ Guardado', 'ok');
+        flashStatus(LANG.composer_saved, 'ok');
     };
 }());
 
@@ -257,6 +257,28 @@ async function nuevoShow() {
     if (data.id) window.location.href = BASE_URL + '/show_editor.php?id=' + data.id;
 }
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function estadoLabel(e) { return {borrador:'Borrador',desarrollo:'En desarrollo',probado:'Probado',rotacion:'En rotación',retirado:'Retirado'}[e]||e; }
+function estadoLabel(e) {
+    const map = { borrador: LANG.status_draft, desarrollo: LANG.status_dev, probado: LANG.status_tested, rotacion: LANG.status_rotation, retirado: LANG.status_retired };
+    return map[e] || e;
+}
 </script>
+<script>
+window.TUTORIAL_CONFIG = {
+    key: 'showrganizer_tutorial_dashboard',
+    steps: [
+        { selector: null, title: <?= json_encode(t('tut_d1_title')) ?>, text: <?= json_encode(t('tut_d1_text')) ?>, position: 'center' },
+        { selector: '.composer',      title: <?= json_encode(t('tut_d2_title')) ?>, text: <?= json_encode(t('tut_d2_text')) ?>, position: 'bottom' },
+        { selector: '.stats-grid',    title: <?= json_encode(t('tut_d3_title')) ?>, text: <?= json_encode(t('tut_d3_text')) ?>, position: 'bottom' },
+        { selector: '.dashboard-cols',title: <?= json_encode(t('tut_d4_title')) ?>, text: <?= json_encode(t('tut_d4_text')) ?>, position: 'top'    },
+        { selector: '#global-fab',    title: <?= json_encode(t('tut_d5_title')) ?>, text: <?= json_encode(t('tut_d5_text')) ?>, position: 'top'    },
+        { selector: '.burger-btn',    title: <?= json_encode(t('tut_d6_title')) ?>, text: <?= json_encode(t('tut_d6_text')) ?>, position: 'bottom' },
+    ],
+    skip:   <?= json_encode(t('tut_skip'))   ?>,
+    next:   <?= json_encode(t('tut_next'))   ?>,
+    prev:   <?= json_encode(t('tut_prev'))   ?>,
+    finish: <?= json_encode(t('tut_finish')) ?>,
+    of:     <?= json_encode(t('tut_of'))     ?>,
+};
+</script>
+<script src="<?= BASE_URL ?>/assets/js/tutorial.js"></script>
 <?php include __DIR__ . '/includes/footer.php'; ?>

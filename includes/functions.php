@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/i18n.php';
 
 function h(string $s): string {
     return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
@@ -31,13 +32,14 @@ function stars_html($puntuacion): string {
 }
 
 function estado_label(string $estado): string {
-    $labels = [
-        'borrador'   => 'Borrador',
-        'desarrollo' => 'En desarrollo',
-        'probado'    => 'Probado',
-        'retirado'   => 'Retirado',
+    $map = [
+        'borrador'   => 'status_draft',
+        'desarrollo' => 'status_dev',
+        'probado'    => 'status_tested',
+        'rotacion'   => 'status_rotation',
+        'retirado'   => 'status_retired',
     ];
-    return $labels[$estado] ?? $estado;
+    return isset($map[$estado]) ? t($map[$estado]) : $estado;
 }
 
 function redirect(string $path): void {

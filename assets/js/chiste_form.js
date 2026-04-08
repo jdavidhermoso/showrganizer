@@ -1,6 +1,8 @@
 (function () {
     'use strict';
 
+    var L = window.LANG || {};
+
     const starsInput = document.getElementById('stars-input');
     const punInput   = document.getElementById('puntuacion');
     const starBtns   = starsInput.querySelectorAll('.star-btn');
@@ -160,7 +162,7 @@
                 const res  = await fetch(BASE_URL + '/api/shows.php?action=historial&id=' + encodeURIComponent(CHISTE_ID));
                 const data = await res.json();
                 if (!data.length) {
-                    historialContent.innerHTML = '<p class="text-muted">Este chiste no aparece en ningún show todavía.</p>';
+                    historialContent.innerHTML = '<p class="text-muted">' + (L.not_in_shows || 'Not in any show yet.') + '</p>';
                     return;
                 }
                 const rows = data.map(s => {
@@ -173,9 +175,13 @@
                         '<td>' + escHtml(s.notas || '') + '</td>' +
                     '</tr>';
                 }).join('');
-                historialContent.innerHTML = '<table class="historial-table"><thead><tr><th>Show</th><th>Fecha / Sala</th><th>Real</th><th>Notas</th></tr></thead><tbody>' + rows + '</tbody></table>';
+                const colShow     = L.col_show      || 'Show';
+                const colDateVenue= L.col_date_venue || 'Date / Venue';
+                const colReal     = L.col_real       || 'Actual';
+                const colNotes    = L.col_notes      || 'Notes';
+                historialContent.innerHTML = '<table class="historial-table"><thead><tr><th>' + colShow + '</th><th>' + colDateVenue + '</th><th>' + colReal + '</th><th>' + colNotes + '</th></tr></thead><tbody>' + rows + '</tbody></table>';
             } catch(_) {
-                historialContent.innerHTML = '<p class="text-muted">Error cargando historial.</p>';
+                historialContent.innerHTML = '<p class="text-muted">' + (L.history_error || 'Error loading history.') + '</p>';
             }
         })();
     }
@@ -201,7 +207,7 @@
         const method = id ? 'PUT' : 'POST';
 
         statusEl.className = 'form-status';
-        statusEl.textContent = 'Guardando...';
+        statusEl.textContent = L.form_saving || 'Saving...';
 
         try {
             const res = await fetch(url, {
@@ -218,18 +224,18 @@
                 return;
             }
             statusEl.className   = 'form-status ok';
-            statusEl.textContent = '✓ Guardado';
+            statusEl.textContent = L.form_saved || '✓ Saved';
             setTimeout(() => { statusEl.textContent = ''; }, 2500);
         } catch (err) {
             statusEl.className   = 'form-status err';
-            statusEl.textContent = err.message || 'Error al guardar';
+            statusEl.textContent = err.message || (L.form_error || 'Error saving');
         }
     });
 
     const delBtn = document.getElementById('delete-btn');
     if (delBtn) {
         delBtn.addEventListener('click', async () => {
-            if (!confirm('¿Eliminar este chiste? Esta acción no se puede deshacer.')) return;
+            if (!confirm(L.confirm_delete_joke || 'Delete this joke?')) return;
             const id  = form.dataset.id || '';
             const res = await fetch(BASE_URL + '/api/chistes.php?id=' + id, { method: 'DELETE' });
             if (res.ok) window.location.href = BASE_URL + '/chistes.php';
@@ -243,6 +249,6 @@
     }
 
     function escHtml(s) {
-        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 }());

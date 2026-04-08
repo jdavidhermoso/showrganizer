@@ -1,6 +1,8 @@
 (function () {
     'use strict';
 
+    var L = window.LANG || {};
+
     var overlay    = document.getElementById('global-composer-overlay');
     var textarea   = document.getElementById('global-composer-texto');
     var catSel     = document.getElementById('global-composer-cat');
@@ -86,7 +88,7 @@
             .then(function(r){ return r.json(); })
             .then(function(cats){
                 catsLoaded = true;
-                catSel.innerHTML = '<option value="">Sin categoría</option>';
+                catSel.innerHTML = '<option value="">' + (L.no_category || '—') + '</option>';
                 cats.forEach(function(c){
                     var opt = document.createElement('option');
                     opt.value = c.nombre;
@@ -98,7 +100,7 @@
 
     async function submit() {
         var texto = textarea.value.trim();
-        if (!texto) { flash('Escribe algo primero.', 'err'); return; }
+        if (!texto) { flash(L.composer_write_first || 'Write something first.', 'err'); return; }
         submitBtn.disabled = true;
         try {
             var res = await fetch(BASE_URL + '/api/chistes.php', {
@@ -116,10 +118,10 @@
             });
             var data = await res.json();
             if (!res.ok) { flash(data.error || 'Error', 'err'); return; }
-            flash('✓ Guardado', 'ok');
+            flash(L.composer_saved || '✓ Saved', 'ok');
             setTimeout(closeComposer, 900);
         } catch(e) {
-            flash('Error de red', 'err');
+            flash(L.network_error || 'Network error', 'err');
         } finally {
             submitBtn.disabled = false;
         }
@@ -131,7 +133,7 @@
     }
 
     function escHtml(s) {
-        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
     fab.addEventListener('click', openComposer);

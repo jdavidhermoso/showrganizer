@@ -19,7 +19,7 @@ $csrf_token = $_SESSION['csrf_token'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!hash_equals($csrf_token, $_POST['csrf_token'] ?? '')) {
-        die('Solicitud no válida.');
+        die(h(t('invalid_request')));
     }
 }
 
@@ -39,14 +39,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['archivo'])) {
     $file = $_FILES['archivo'];
     if ($file['error'] !== UPLOAD_ERR_OK) {
-        $error = 'Error al subir el archivo (código ' . $file['error'] . ').';
+        $error = t('error_upload', $file['error']);
     } else {
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         if ($ext === 'docx')      $paragraphs = parse_docx($file['tmp_name']);
         elseif ($ext === 'txt')   $paragraphs = parse_txt($file['tmp_name']);
-        else                      $error = 'Formato no admitido. Sube un archivo .docx o .txt.';
+        else                      $error = t('error_unsupported');
 
-        if (!$error && empty($paragraphs)) $error = 'No se encontraron párrafos en el archivo.';
+        if (!$error && empty($paragraphs)) $error = t('error_no_paragraphs');
         if (!$error) $step = 'preview';
     }
 }
@@ -85,29 +85,29 @@ function parse_txt(string $path): array {
     return array_values(array_filter(array_map('trim', $blocks)));
 }
 
-$page_title = 'Importar chistes';
+$page_title = t('import_title');
 include __DIR__ . '/includes/header.php';
 ?>
 
 <div class="page-header">
-    <h2>Importar chistes</h2>
-    <a href="chistes.php" class="btn btn-ghost">← Volver</a>
+    <h2><?= h(t('import_title')) ?></h2>
+    <a href="chistes.php" class="btn btn-ghost"><?= h(t('back')) ?></a>
 </div>
 
 <?php if ($step === 'upload'): ?>
     <?php if ($error): ?><p class="alert alert-err"><?= h($error) ?></p><?php endif; ?>
     <div class="form-card" style="max-width:480px">
         <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1.25rem">
-            Sube un archivo <strong>.docx</strong> o <strong>.txt</strong>. Se creará un chiste por cada párrafo.
+            <?= t('upload_hint') ?>
         </p>
         <form method="post" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="<?= h($csrf_token) ?>">
             <div class="form-group">
-                <label for="archivo">Archivo</label>
+                <label for="archivo"><?= h(t('file_label')) ?></label>
                 <input type="file" name="archivo" id="archivo" accept=".docx,.txt" required style="padding:0.4rem;cursor:pointer">
             </div>
             <div class="form-actions" style="margin-top:1rem">
-                <button type="submit" class="btn btn-primary">Analizar archivo</button>
+                <button type="submit" class="btn btn-primary"><?= h(t('analyze_file')) ?></button>
             </div>
         </form>
     </div>
@@ -117,25 +117,25 @@ include __DIR__ . '/includes/header.php';
         <input type="hidden" name="confirm" value="1">
         <input type="hidden" name="csrf_token" value="<?= h($csrf_token) ?>">
         <div class="import-toolbar">
-            <span class="import-count" id="import-count"><?= count($paragraphs) ?> párrafos encontrados</span>
+            <span class="import-count" id="import-count"><?= h(t('paragraphs_found', count($paragraphs))) ?></span>
             <div class="import-bulk">
                 <select name="categoria" class="filter-select">
-                    <option value="">Sin categoría</option>
+                    <option value=""><?= h(t('no_category')) ?></option>
                     <?php foreach ($categorias as $cat): ?>
                         <option value="<?= h($cat) ?>"><?= h($cat) ?></option>
                     <?php endforeach; ?>
                 </select>
                 <select name="estado" class="filter-select">
-                    <option value="borrador">Borrador</option>
-                    <option value="desarrollo">En desarrollo</option>
-                    <option value="probado">Probado</option>
-                    <option value="retirado">Retirado</option>
+                    <option value="borrador"><?= h(t('status_draft')) ?></option>
+                    <option value="desarrollo"><?= h(t('status_dev')) ?></option>
+                    <option value="probado"><?= h(t('status_tested')) ?></option>
+                    <option value="retirado"><?= h(t('status_retired')) ?></option>
                 </select>
             </div>
             <div style="display:flex;gap:0.5rem;align-items:center">
-                <button type="button" class="btn btn-ghost btn-sm" onclick="toggleAll(true)">Seleccionar todo</button>
-                <button type="button" class="btn btn-ghost btn-sm" onclick="toggleAll(false)">Quitar todo</button>
-                <button type="submit" class="btn btn-primary" id="import-btn">Importar <?= count($paragraphs) ?> chistes</button>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="toggleAll(true)"><?= h(t('select_all')) ?></button>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="toggleAll(false)"><?= h(t('deselect_all')) ?></button>
+                <button type="submit" class="btn btn-primary" id="import-btn"><?= h(t('import_btn', count($paragraphs))) ?></button>
             </div>
         </div>
 
@@ -147,7 +147,7 @@ include __DIR__ . '/includes/header.php';
             </label>
             <?php if ($i < count($paragraphs) - 1): ?>
             <div class="merge-bar">
-                <button type="button" class="merge-btn" onclick="mergeWithNext(this)">⤵ Fusionar con el siguiente</button>
+                <button type="button" class="merge-btn" onclick="mergeWithNext(this)"><?= h(t('merge_next')) ?></button>
             </div>
             <?php endif; ?>
             <?php endforeach; ?>
@@ -168,10 +168,12 @@ include __DIR__ . '/includes/header.php';
         .merge-btn:hover { color:var(--accent); border-color:var(--accent); background:rgba(240,160,48,.06); }
     </style>
     <script>
+        var IMPORT_TPL_COUNT  = <?= json_encode(t('paragraphs_found', 0)) ?>;
+        var IMPORT_TPL_BTN    = <?= json_encode(t('import_btn', 0)) ?>;
         function updateCount() {
             const n = document.querySelectorAll('#import-list input:checked').length;
-            document.getElementById('import-count').textContent = n + ' chiste' + (n!==1?'s':'') + ' seleccionado' + (n!==1?'s':'');
-            document.getElementById('import-btn').textContent   = 'Importar ' + n + ' chiste' + (n!==1?'s':'');
+            document.getElementById('import-count').textContent = IMPORT_TPL_COUNT.replace('0', n);
+            document.getElementById('import-btn').textContent   = IMPORT_TPL_BTN.replace('0', n);
         }
         function toggleAll(state) { document.querySelectorAll('#import-list input[type=checkbox]').forEach(cb => cb.checked = state); updateCount(); }
         function mergeWithNext(btn) {

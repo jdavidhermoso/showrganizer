@@ -1,7 +1,7 @@
 {
     "name": "Showrganizer",
     "short_name": "Showrganizer",
-    "description": "La herramienta para cómicos de stand-up. Organiza tus chistes, construye setlists y analiza tus shows.",
+    "description": "La herramienta para comicxs de stand-up. Organiza tus chistes, construye setlists y analiza tus shows.",
     "start_url": "/dashboard.php",
     "scope": "/",
     "display": "standalone",

@@ -1,6 +1,8 @@
 (function () {
     'use strict';
 
+    var L = window.LANG || {};
+
     let allJokes = [];
 
     const list    = document.getElementById('chistes-list');
@@ -14,33 +16,36 @@
     const btnClr  = document.getElementById('filter-clear');
 
     async function load() {
-        list.innerHTML = '<p style="color:var(--text-muted);padding:1rem">Cargando...</p>';
+        list.innerHTML = '<p style="color:var(--text-muted);padding:1rem">' + (L.loading || 'Loading...') + '</p>';
         try {
             const res  = await fetch(BASE_URL + '/api/chistes.php');
             const text = await res.text();
             let data;
             try { data = JSON.parse(text); } catch (_) {
-                list.innerHTML = '<p style="color:var(--danger)">Error del servidor:<br><pre style="font-size:0.75rem;overflow:auto;max-height:200px">' + text.replace(/</g,'&lt;') + '</pre></p>';
+                list.innerHTML = '<p style="color:var(--danger)">' + (L.server_error || 'Server error') + ':<br><pre style="font-size:0.75rem;overflow:auto;max-height:200px">' + text.replace(/</g,'&lt;') + '</pre></p>';
                 return;
             }
             if (!res.ok) {
-                list.innerHTML = '<p style="color:var(--danger)">Error ' + res.status + ': ' + (data.error || 'desconocido') + '</p>';
+                list.innerHTML = '<p style="color:var(--danger)">Error ' + res.status + ': ' + escHtml(data.error || 'unknown') + '</p>';
                 return;
             }
             allJokes = Array.isArray(data) ? data : [];
             renderList(allJokes);
         } catch (e) {
-            list.innerHTML = '<p style="color:var(--danger)">Error de red: ' + e.message + '</p>';
+            list.innerHTML = '<p style="color:var(--danger)">' + (L.network_error || 'Network error') + ': ' + escHtml(e.message) + '</p>';
         }
     }
 
     function renderList(jokes) {
         list.innerHTML = '';
-        count.textContent = jokes.length === 1 ? '1 chiste' : jokes.length + ' chistes';
         if (jokes.length === 0) {
-            list.innerHTML = '<p class="empty-state">No hay chistes con esos filtros.</p>';
+            count.textContent = '';
+            list.innerHTML = '<p class="empty-state">' + (L.no_jokes_filter || 'No jokes.') + '</p>';
             return;
         }
+        count.textContent = jokes.length === 1
+            ? (L.joke_count_single || '1 joke')
+            : (L.joke_count_plural || '%d jokes').replace('%d', jokes.length);
         const frag = document.createDocumentFragment();
         jokes.forEach(j => frag.appendChild(makeCard(j)));
         list.appendChild(frag);
@@ -107,7 +112,7 @@
                 case 'puntuacion-asc':  return (a.puntuacion ?? 99) - (b.puntuacion ?? 99);
                 case 'duracion-desc':   return (b.duracion ?? -1) - (a.duracion ?? -1);
                 case 'duracion-asc':    return (a.duracion ?? 99999) - (b.duracion ?? 99999);
-                case 'az':              return a.texto.localeCompare(b.texto, 'es');
+                case 'az':              return a.texto.localeCompare(b.texto);
                 default:                return (a.fecha_creacion || '') < (b.fecha_creacion || '') ? 1 : -1;
             }
         });
@@ -148,7 +153,18 @@
     }
 
     function estadoLabel(e) {
-        return { borrador: 'Borrador', desarrollo: 'En desarrollo', probado: 'Probado', rotacion: 'En rotación', retirado: 'Retirado' }[e] || e;
+        const map = {
+            borrador:   L.status_draft    || 'Draft',
+            desarrollo: L.status_dev      || 'In development',
+            probado:    L.status_tested   || 'Tested',
+            rotacion:   L.status_rotation || 'In rotation',
+            retirado:   L.status_retired  || 'Retired',
+        };
+        return map[e] || e;
+    }
+
+    function escHtml(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
     load();

@@ -1,6 +1,8 @@
 (function () {
     'use strict';
 
+    var L = window.LANG || {};
+
     let blocks    = [];
     let allJokes  = [];
     let showId    = SHOW_ID;
@@ -39,14 +41,14 @@
             const res = await fetch(BASE_URL + '/api/chistes.php');
             allJokes  = await res.json();
         } catch (e) {
-            sidebarList.innerHTML = '<p class="sidebar-loading" style="color:var(--danger)">Error al cargar chistes.</p>';
+            sidebarList.innerHTML = '<p class="sidebar-loading" style="color:var(--danger)">' + (L.error_load_jokes || 'Error loading jokes.') + '</p>';
         }
     }
 
     function renderSidebar(jokes) {
         sidebarList.innerHTML = '';
         if (jokes.length === 0) {
-            sidebarList.innerHTML = '<p class="sidebar-no-results">Sin resultados.</p>';
+            sidebarList.innerHTML = '<p class="sidebar-no-results">' + (L.no_sidebar_results || 'No results.') + '</p>';
             return;
         }
         jokes.forEach(j => sidebarList.appendChild(makeSidebarCard(j)));
@@ -168,7 +170,7 @@
             if (joke) {
                 jDiv.innerHTML =
                     '<div class="joke-block-header">' +
-                        '<span class="joke-block-category">' + escHtml(joke.categoria || 'Sin categoría') + '</span>' +
+                        '<span class="joke-block-category">' + escHtml(joke.categoria || (L.no_category || '—')) + '</span>' +
                         '<span class="joke-block-rating">' + starsHtml(joke.puntuacion) + '</span>' +
                         '<span class="joke-block-estado estado estado-' + joke.estado + '">' + estadoLabel(joke.estado) + '</span>' +
                     '</div>' +
@@ -211,7 +213,7 @@
                 notasWrap.appendChild(notasTA);
                 jDiv.appendChild(notasWrap);
             } else {
-                jDiv.innerHTML = '<em style="color:var(--text-muted)">Chiste #' + block.joke_id + ' (no encontrado)</em>';
+                jDiv.innerHTML = '<em style="color:var(--text-muted)">#' + block.joke_id + ' (' + (L.not_in_shows || 'not found') + ')</em>';
             }
             inner.appendChild(jDiv);
         } else if (block.type === 'video') {
@@ -325,7 +327,7 @@
         delBtn.innerHTML = '×';
         delBtn.title = 'Eliminar bloque';
         delBtn.addEventListener('click', () => {
-            if (block.type === 'joke' && !confirm('¿Eliminar este chiste del show?')) return;
+            if (block.type === 'joke' && !confirm(L.confirm_del_from_show || 'Remove this joke from the show?')) return;
             blocks.splice(index, 1);
             renderDocument();
             scheduleSave();
@@ -462,7 +464,7 @@
 
     function scheduleSave() {
         if (saveTimer) clearTimeout(saveTimer);
-        setSaveStatus('saving', 'Guardando...');
+        setSaveStatus('saving', 'composer_saving');
         saveTimer = setTimeout(save, 1500);
     }
 
@@ -518,14 +520,14 @@
                     const data = await res.json();
                     showId = data.id;
                     history.replaceState(null, '', BASE_URL + '/show_editor.php?id=' + showId);
-                    setSaveStatus('saved', '✓ Guardado');
+                    setSaveStatus('saved', 'composer_saved');
                     return;
                 }
             }
             if (!res.ok) throw new Error('Error ' + res.status);
-            setSaveStatus('saved', '✓ Guardado');
+            setSaveStatus('saved', 'composer_saved');
         } catch (e) {
-            setSaveStatus('error', 'Error al guardar');
+            setSaveStatus('error', 'form_error');
         }
     }
 
@@ -557,9 +559,9 @@
         });
     }
 
-    function setSaveStatus(cls, text) {
+    function setSaveStatus(cls, key) {
         saveStatus.className = 'save-status ' + cls;
-        saveStatus.textContent = text;
+        saveStatus.textContent = L[key] || key;
     }
 
     saveBtn.addEventListener('click', () => {
@@ -651,7 +653,14 @@
     }
 
     function estadoLabel(e) {
-        return { borrador: 'Borrador', desarrollo: 'En desarrollo', probado: 'Probado', rotacion: 'En rotación', retirado: 'Retirado' }[e] || e;
+        const map = {
+            borrador:   L.status_draft    || 'Draft',
+            desarrollo: L.status_dev      || 'In development',
+            probado:    L.status_tested   || 'Tested',
+            rotacion:   L.status_rotation || 'In rotation',
+            retirado:   L.status_retired  || 'Retired',
+        };
+        return map[e] || e;
     }
 
     const chartPanel  = document.getElementById('chart-panel');
