@@ -6,6 +6,7 @@ function session_start_safe(): void {
         session_set_cookie_params([
             'lifetime' => SESSION_TIMEOUT,
             'httponly' => true,
+            'secure'   => true,
             'samesite' => 'Lax',
         ]);
         session_start();

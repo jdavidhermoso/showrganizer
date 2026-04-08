@@ -25,6 +25,7 @@ include __DIR__ . '/includes/header.php';
         <option value="borrador">Borrador</option>
         <option value="desarrollo">En desarrollo</option>
         <option value="probado">Probado</option>
+        <option value="rotacion">En rotación</option>
         <option value="retirado">Retirado</option>
     </select>
     <select id="filter-categoria" class="filter-select">
@@ -41,6 +42,15 @@ include __DIR__ . '/includes/header.php';
         <option value="2">★★☆☆☆</option>
         <option value="1">★☆☆☆☆</option>
         <option value="0">Sin puntuar</option>
+    </select>
+    <select id="filter-sort" class="filter-select">
+        <option value="reciente">Más reciente</option>
+        <option value="antiguos">Más antiguo</option>
+        <option value="puntuacion-desc">Mayor puntuación</option>
+        <option value="puntuacion-asc">Menor puntuación</option>
+        <option value="duracion-desc">Mayor duración</option>
+        <option value="duracion-asc">Menor duración</option>
+        <option value="az">A → Z</option>
     </select>
     <button id="filter-clear" class="btn btn-ghost">Limpiar</button>
 </div>

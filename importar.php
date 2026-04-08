@@ -11,6 +11,18 @@ $error      = '';
 $paragraphs = [];
 $step       = 'upload';
 
+session_start_safe();
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrf_token = $_SESSION['csrf_token'];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!hash_equals($csrf_token, $_POST['csrf_token'] ?? '')) {
+        die('Solicitud no válida.');
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm'])) {
     $textos       = $_POST['textos'] ?? [];
     $categoria    = $_POST['categoria'] ?? '';
@@ -89,6 +101,7 @@ include __DIR__ . '/includes/header.php';
             Sube un archivo <strong>.docx</strong> o <strong>.txt</strong>. Se creará un chiste por cada párrafo.
         </p>
         <form method="post" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="<?= h($csrf_token) ?>">
             <div class="form-group">
                 <label for="archivo">Archivo</label>
                 <input type="file" name="archivo" id="archivo" accept=".docx,.txt" required style="padding:0.4rem;cursor:pointer">
@@ -102,6 +115,7 @@ include __DIR__ . '/includes/header.php';
 <?php elseif ($step === 'preview'): ?>
     <form method="post">
         <input type="hidden" name="confirm" value="1">
+        <input type="hidden" name="csrf_token" value="<?= h($csrf_token) ?>">
         <div class="import-toolbar">
             <span class="import-count" id="import-count"><?= count($paragraphs) ?> párrafos encontrados</span>
             <div class="import-bulk">

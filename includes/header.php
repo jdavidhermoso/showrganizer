@@ -13,29 +13,88 @@ $current = basename($_SERVER['PHP_SELF'], '.php');
 </head>
 <body>
 <nav class="navbar">
-    <a href="<?= BASE_URL ?>/dashboard.php" class="navbar-brand"><?= APP_NAME ?></a>
-    <ul class="navbar-nav">
-        <li><a href="<?= BASE_URL ?>/chistes.php" class="<?= $current === 'chistes' ? 'active' : '' ?>">Chistes</a></li>
-        <li><a href="<?= BASE_URL ?>/shows.php" class="<?= $current === 'shows' ? 'active' : '' ?>">Shows</a></li>
-    </ul>
+    <button class="burger-btn" id="sidebar-toggle" aria-label="Abrir menú">
+        <span></span><span></span><span></span>
+    </button>
+    <a href="<?= BASE_URL ?>/dashboard.php" class="navbar-brand">
+        <img src="<?= BASE_URL ?>/assets/logo.webp" alt="<?= APP_NAME ?>" class="navbar-logo">
+        <?= APP_NAME ?>
+    </a>
     <div class="navbar-right">
-        <button class="theme-toggle" id="theme-toggle" aria-label="Cambiar tema" title="Cambiar tema">☀️</button>
         <a href="<?= BASE_URL ?>/logout.php" class="navbar-logout">Salir</a>
     </div>
 </nav>
+
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<aside class="sidebar" id="sidebar" aria-label="Navegación">
+    <div class="sidebar-header">
+        <a href="<?= BASE_URL ?>/dashboard.php" class="navbar-brand">
+            <img src="<?= BASE_URL ?>/assets/logo.webp" alt="<?= APP_NAME ?>" class="navbar-logo">
+            <?= APP_NAME ?>
+        </a>
+        <button class="sidebar-close" id="sidebar-close" aria-label="Cerrar menú">×</button>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="<?= BASE_URL ?>/chistes.php" class="sidebar-link <?= $current === 'chistes' ? 'active' : '' ?>">
+            <span class="sidebar-link-icon">📝</span> Chistes
+        </a>
+        <a href="<?= BASE_URL ?>/shows.php" class="sidebar-link <?= $current === 'shows' ? 'active' : '' ?>">
+            <span class="sidebar-link-icon">🎤</span> Shows
+        </a>
+        <hr class="sidebar-sep">
+        <button class="sidebar-link sidebar-theme-toggle" id="theme-toggle" aria-label="Cambiar tema">
+            <span class="sidebar-link-icon" id="theme-icon">🌙</span>
+            <span id="theme-label">Tema oscuro</span>
+        </button>
+    </nav>
+</aside>
+
 <script>
 (function(){
-    var btn = document.getElementById('theme-toggle');
-    function update(){
+    var themeBtn   = document.getElementById('theme-toggle');
+    var themeIcon  = document.getElementById('theme-icon');
+    var themeLabel = document.getElementById('theme-label');
+    var toggle     = document.getElementById('sidebar-toggle');
+    var sidebar    = document.getElementById('sidebar');
+    var overlay    = document.getElementById('sidebar-overlay');
+    var close      = document.getElementById('sidebar-close');
+
+    function updateTheme(){
         var light = document.documentElement.classList.contains('light');
-        btn.textContent = light ? '🌙' : '☀️';
+        themeIcon.textContent  = light ? '🌙' : '☀️';
+        themeLabel.textContent = light ? 'Tema oscuro' : 'Tema claro';
     }
-    update();
-    btn.addEventListener('click', function(){
+    updateTheme();
+    themeBtn.addEventListener('click', function(){
         var isLight = document.documentElement.classList.toggle('light');
         localStorage.setItem('theme', isLight ? 'light' : 'dark');
-        update();
+        updateTheme();
     });
+
+    function openSidebar(){
+        sidebar.classList.add('open');
+        overlay.classList.add('open');
+        document.body.classList.add('sidebar-open');
+        toggle.setAttribute('aria-expanded', 'true');
+    }
+    function closeSidebar(){
+        sidebar.classList.remove('open');
+        overlay.classList.remove('open');
+        document.body.classList.remove('sidebar-open');
+        toggle.setAttribute('aria-expanded', 'false');
+    }
+
+    toggle.addEventListener('click', function(e){
+        e.stopPropagation();
+        sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+    });
+    close.addEventListener('click', closeSidebar);
+    document.addEventListener('click', function(e){
+        if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !toggle.contains(e.target)) {
+            closeSidebar();
+        }
+    });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeSidebar(); });
 }());
 </script>
 <button id="global-fab" class="global-fab" aria-label="Nuevo chiste">+</button>
@@ -55,6 +114,8 @@ $current = basename($_SERVER['PHP_SELF'], '.php');
                 <option value="borrador">Borrador</option>
                 <option value="desarrollo">En desarrollo</option>
                 <option value="probado">Probado</option>
+                <option value="rotacion">En rotación</option>
+                <option value="retirado">Retirado</option>
             </select>
         </div>
         <div class="composer-stars" id="global-composer-stars-input" data-value="0">

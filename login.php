@@ -20,6 +20,7 @@ $auth_url = generate_oauth_url();
 </head>
 <body class="auth-body">
 <div class="auth-box">
+    <img src="assets/logo.webp" alt="<?= APP_NAME ?>" class="login-logo">
     <h1><?= APP_NAME ?></h1>
     <a href="<?= h($auth_url) ?>" class="btn-google">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -30,6 +31,10 @@ $auth_url = generate_oauth_url();
         </svg>
         Entrar con Google
     </a>
+    <div class="login-links">
+        <a href="/privacy.html">Política de privacidad</a>
+        <a href="/terms.html">Términos y condiciones</a>
+    </div>
 </div>
 
 <style>
@@ -54,6 +59,23 @@ $auth_url = generate_oauth_url();
     background: #f8f9fa;
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     text-decoration: none;
+}
+.login-links {
+    display: flex;
+    justify-content: center;
+    gap: 1.25rem;
+    margin-top: 1.25rem;
+    font-size: 0.8rem;
+}
+.login-links a {
+    color: var(--text-muted);
+}
+.login-links a:hover { text-decoration: underline; }
+.login-logo {
+    display: block;
+    margin: 0 auto 1rem;
+    height: 72px;
+    width: auto;
 }
 </style>
 </body>

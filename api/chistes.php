@@ -66,6 +66,8 @@ try {
             'puntuacion' => $data['puntuacion'] ?? null,
             'estado'     => $data['estado']    ?? 'borrador',
             'tags'       => $data['tags']      ?? [],
+            'duracion'   => $data['duracion']  ?? null,
+            'callbacks'  => $data['callbacks'] ?? [],
         ]);
         json_response(['id' => $id], 201);
     }
@@ -82,6 +84,8 @@ try {
             'puntuacion' => $data['puntuacion'] ?? null,
             'estado'     => $data['estado']    ?? 'borrador',
             'tags'       => $data['tags']      ?? [],
+            'duracion'   => $data['duracion']  ?? null,
+            'callbacks'  => $data['callbacks'] ?? [],
         ]);
         json_response(['ok' => true]);
     }

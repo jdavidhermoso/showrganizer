@@ -51,6 +51,7 @@ include __DIR__ . '/includes/header.php';
                 <option value="borrador"   <?= ($chiste && $chiste['estado'] === 'borrador')   ? 'selected' : '' ?>>Borrador</option>
                 <option value="desarrollo" <?= ($chiste && $chiste['estado'] === 'desarrollo')  ? 'selected' : '' ?>>En desarrollo</option>
                 <option value="probado"    <?= ($chiste && $chiste['estado'] === 'probado')     ? 'selected' : '' ?>>Probado</option>
+                <option value="rotacion"   <?= ($chiste && $chiste['estado'] === 'rotacion')    ? 'selected' : '' ?>>En rotación</option>
                 <option value="retirado"   <?= ($chiste && $chiste['estado'] === 'retirado')    ? 'selected' : '' ?>>Retirado</option>
             </select>
         </div>
@@ -65,6 +66,16 @@ include __DIR__ . '/includes/header.php';
             </div>
             <input type="hidden" id="puntuacion" name="puntuacion" value="<?= $chiste ? (int)($chiste['puntuacion'] ?? 0) : '' ?>">
         </div>
+
+        <div class="form-group">
+            <label for="duracion">Duración (min)</label>
+            <?php
+                $durSec = $chiste ? ($chiste['duracion'] ?? null) : null;
+                $durMin = $durSec !== null ? round($durSec / 60, 1) : '';
+            ?>
+            <input type="number" id="duracion" name="duracion" min="0" step="0.5"
+                   placeholder="ej. 3.5" value="<?= h((string)$durMin) ?>" class="form-input-short">
+        </div>
     </div>
 
     <div class="form-group">
@@ -78,6 +89,19 @@ include __DIR__ . '/includes/header.php';
         <input type="hidden" id="tags-hidden" name="tags" value="<?= h(implode(',', $chiste_tags)) ?>">
     </div>
 
+    <div class="form-group">
+        <label>Callbacks <span class="label-hint">(chistes que este referencia)</span></label>
+        <div class="callbacks-field" id="callbacks-field">
+            <div class="callbacks-chips" id="callbacks-chips"></div>
+            <div class="callbacks-search-wrap">
+                <input type="text" id="callbacks-search" placeholder="Buscar chiste..." autocomplete="off">
+                <ul id="callbacks-suggestions" class="callbacks-suggestions"></ul>
+            </div>
+        </div>
+        <input type="hidden" id="callbacks-hidden" name="callbacks"
+               value="<?= h(json_encode($chiste ? ($chiste['callbacks'] ?? []) : [])) ?>">
+    </div>
+
     <div class="form-actions">
         <?php if ($id): ?>
             <button type="button" id="delete-btn" class="btn btn-danger">Eliminar</button>
@@ -86,6 +110,13 @@ include __DIR__ . '/includes/header.php';
     </div>
     <div id="form-status" class="form-status"></div>
 </form>
+
+<?php if ($id): ?>
+<section class="form-card historial-section">
+    <h3 class="historial-title">Historial de shows</h3>
+    <div id="historial-content"><p class="text-muted">Cargando...</p></div>
+</section>
+<?php endif; ?>
 
 <script>
 const CHISTE_ID = '<?= h($id) ?>';

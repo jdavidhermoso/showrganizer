@@ -74,17 +74,126 @@
 
     renderTagChips();
 
+    const callbacksField  = document.getElementById('callbacks-field');
+    const callbacksHidden = document.getElementById('callbacks-hidden');
+    const callbacksChips  = document.getElementById('callbacks-chips');
+    const callbacksSearch = document.getElementById('callbacks-search');
+    const callbacksSugg   = document.getElementById('callbacks-suggestions');
+
+    let allJokesCache = null;
+    let callbackIds   = [];
+
+    try { callbackIds = JSON.parse(callbacksHidden?.value || '[]'); } catch(_) {}
+
+    async function loadAllJokes() {
+        if (allJokesCache) return allJokesCache;
+        try {
+            const res = await fetch(BASE_URL + '/api/chistes.php');
+            allJokesCache = await res.json();
+        } catch(_) { allJokesCache = []; }
+        return allJokesCache;
+    }
+
+    async function renderCallbackChips() {
+        if (!callbacksChips) return;
+        callbacksChips.innerHTML = '';
+        if (!callbackIds.length) return;
+        const jokes = await loadAllJokes();
+        callbackIds.forEach(cid => {
+            const joke = jokes.find(j => j.id === cid);
+            const chip = document.createElement('span');
+            chip.className = 'tag-chip';
+            const label = joke ? joke.texto.slice(0, 40) + (joke.texto.length > 40 ? '…' : '') : cid;
+            chip.innerHTML = escHtml(label) + '<button type="button" class="tag-remove">×</button>';
+            chip.querySelector('.tag-remove').addEventListener('click', () => {
+                callbackIds = callbackIds.filter(i => i !== cid);
+                updateCallbacksHidden();
+                renderCallbackChips();
+            });
+            callbacksChips.appendChild(chip);
+        });
+    }
+
+    function updateCallbacksHidden() {
+        if (callbacksHidden) callbacksHidden.value = JSON.stringify(callbackIds);
+    }
+
+    if (callbacksSearch) {
+        callbacksSearch.addEventListener('input', async () => {
+            const q = callbacksSearch.value.trim().toLowerCase();
+            callbacksSugg.innerHTML = '';
+            if (!q) { callbacksSugg.style.display = 'none'; return; }
+            const jokes = await loadAllJokes();
+            const currentId = document.getElementById('chiste-form')?.dataset.id || '';
+            const matches = jokes.filter(j =>
+                j.id !== currentId &&
+                !callbackIds.includes(j.id) &&
+                j.texto.toLowerCase().includes(q)
+            ).slice(0, 6);
+            if (!matches.length) { callbacksSugg.style.display = 'none'; return; }
+            matches.forEach(j => {
+                const li = document.createElement('li');
+                li.textContent = j.texto.slice(0, 60) + (j.texto.length > 60 ? '…' : '');
+                li.addEventListener('mousedown', e => {
+                    e.preventDefault();
+                    callbackIds.push(j.id);
+                    updateCallbacksHidden();
+                    renderCallbackChips();
+                    callbacksSearch.value = '';
+                    callbacksSugg.style.display = 'none';
+                });
+                callbacksSugg.appendChild(li);
+            });
+            callbacksSugg.style.display = 'block';
+        });
+        callbacksSearch.addEventListener('blur', () => {
+            setTimeout(() => { callbacksSugg.style.display = 'none'; }, 150);
+        });
+    }
+
+    renderCallbackChips();
+
+    const historialContent = document.getElementById('historial-content');
+    if (historialContent && CHISTE_ID) {
+        (async () => {
+            try {
+                const res  = await fetch(BASE_URL + '/api/shows.php?action=historial&id=' + encodeURIComponent(CHISTE_ID));
+                const data = await res.json();
+                if (!data.length) {
+                    historialContent.innerHTML = '<p class="text-muted">Este chiste no aparece en ningún show todavía.</p>';
+                    return;
+                }
+                const rows = data.map(s => {
+                    const stars = s.estrellas_reales != null ? '★'.repeat(s.estrellas_reales) + '☆'.repeat(5 - s.estrellas_reales) : '—';
+                    const meta  = [s.fecha_show, s.sala, s.ciudad].filter(Boolean).join(' · ');
+                    return '<tr>' +
+                        '<td><a href="' + BASE_URL + '/show_editor.php?id=' + escHtml(s.id) + '">' + escHtml(s.titulo) + '</a></td>' +
+                        '<td>' + escHtml(meta || '—') + '</td>' +
+                        '<td class="stars">' + stars + '</td>' +
+                        '<td>' + escHtml(s.notas || '') + '</td>' +
+                    '</tr>';
+                }).join('');
+                historialContent.innerHTML = '<table class="historial-table"><thead><tr><th>Show</th><th>Fecha / Sala</th><th>Real</th><th>Notas</th></tr></thead><tbody>' + rows + '</tbody></table>';
+            } catch(_) {
+                historialContent.innerHTML = '<p class="text-muted">Error cargando historial.</p>';
+            }
+        })();
+    }
+
     const form     = document.getElementById('chiste-form');
     const statusEl = document.getElementById('form-status');
 
     form.addEventListener('submit', async e => {
         e.preventDefault();
+        const durMin = parseFloat(document.getElementById('duracion')?.value || '');
         const data = {
             texto:      document.getElementById('texto').value,
             categoria:  document.getElementById('categoria').value || '',
             estado:     document.getElementById('estado').value,
             puntuacion: punInput.value ? parseInt(punInput.value) : null,
             tags:       tags,
+            duracion:   !isNaN(durMin) && durMin >= 0 ? Math.round(durMin * 60) : null,
+            callbacks:  getCallbackIds(),
         };
 
         const id     = form.dataset.id || '';
@@ -125,6 +234,12 @@
             const res = await fetch(BASE_URL + '/api/chistes.php?id=' + id, { method: 'DELETE' });
             if (res.ok) window.location.href = BASE_URL + '/chistes.php';
         });
+    }
+
+    function getCallbackIds() {
+        const el = document.getElementById('callbacks-hidden');
+        if (!el || !el.value) return [];
+        try { return JSON.parse(el.value); } catch (_) { return []; }
     }
 
     function escHtml(s) {

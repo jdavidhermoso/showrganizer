@@ -25,6 +25,7 @@
             blocks = SHOW_DATA.blocks.map(b => {
                 if (b.type === 'joke') {
                     b.jokeData = allJokes.find(j => j.id === b.joke_id) || null;
+                    b.notas    = b.notas || '';
                 }
                 return b;
             });
@@ -119,6 +120,7 @@
         });
 
         if (chartOpen) renderChart();
+        updateTotalDuration();
 
         if (focusedId) {
             const el = docBlocks.querySelector('[data-block-id="' + focusedId + '"] .text-block-content');
@@ -197,10 +199,76 @@
                 }
 
                 jDiv.appendChild(realRow);
+
+                const notasWrap = document.createElement('div');
+                notasWrap.className = 'joke-block-notas-wrap';
+                const notasTA = document.createElement('textarea');
+                notasTA.className   = 'joke-block-notas';
+                notasTA.placeholder = 'Notas post-show...';
+                notasTA.value       = block.notas || '';
+                notasTA.rows        = 2;
+                notasTA.addEventListener('input', () => { block.notas = notasTA.value; scheduleSave(); });
+                notasWrap.appendChild(notasTA);
+                jDiv.appendChild(notasWrap);
             } else {
                 jDiv.innerHTML = '<em style="color:var(--text-muted)">Chiste #' + block.joke_id + ' (no encontrado)</em>';
             }
             inner.appendChild(jDiv);
+        } else if (block.type === 'video') {
+            const vDiv = document.createElement('div');
+            vDiv.className = 'video-block-content';
+
+            const embedId = youtubeId(block.url);
+
+            if (embedId) {
+                const iframe = document.createElement('iframe');
+                iframe.src = 'https://www.youtube.com/embed/' + embedId;
+                iframe.allowFullscreen = true;
+                iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+                iframe.className = 'video-embed';
+                vDiv.appendChild(iframe);
+
+                const urlRow = document.createElement('div');
+                urlRow.className = 'video-url-row';
+                const urlSpan = document.createElement('span');
+                urlSpan.className = 'video-url-label';
+                urlSpan.textContent = block.url;
+                const changeBtn = document.createElement('button');
+                changeBtn.className = 'btn btn-ghost btn-sm';
+                changeBtn.textContent = 'Cambiar URL';
+                changeBtn.addEventListener('click', () => {
+                    block.url = '';
+                    renderDocument();
+                });
+                urlRow.appendChild(urlSpan);
+                urlRow.appendChild(changeBtn);
+                vDiv.appendChild(urlRow);
+            } else {
+                const urlInput = document.createElement('input');
+                urlInput.type = 'text';
+                urlInput.className = 'video-url-input';
+                urlInput.placeholder = 'Pega la URL de YouTube...';
+                urlInput.value = block.url;
+                urlInput.addEventListener('input', () => {
+                    block.url = urlInput.value.trim();
+                    scheduleSave();
+                });
+                urlInput.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') {
+                        if (youtubeId(block.url)) renderDocument();
+                    }
+                });
+                urlInput.addEventListener('paste', e => {
+                    setTimeout(() => {
+                        block.url = urlInput.value.trim();
+                        if (youtubeId(block.url)) renderDocument();
+                        scheduleSave();
+                    }, 0);
+                });
+                vDiv.appendChild(urlInput);
+            }
+
+            inner.appendChild(vDiv);
         }
 
         const actions = document.createElement('div');
@@ -257,6 +325,7 @@
         delBtn.innerHTML = '×';
         delBtn.title = 'Eliminar bloque';
         delBtn.addEventListener('click', () => {
+            if (block.type === 'joke' && !confirm('¿Eliminar este chiste del show?')) return;
             blocks.splice(index, 1);
             renderDocument();
             scheduleSave();
@@ -358,6 +427,21 @@
         }
     });
 
+    function addVideoBlock(afterIndex) {
+        const block = { id: genId(), type: 'video', url: '', titulo: '' };
+        if (afterIndex === undefined || afterIndex >= blocks.length - 1) {
+            blocks.push(block);
+        } else {
+            blocks.splice(afterIndex + 1, 0, block);
+        }
+        renderDocument();
+        scheduleSave();
+        requestAnimationFrame(() => {
+            const el = docBlocks.querySelector('[data-block-id="' + block.id + '"] .video-url-input');
+            if (el) el.focus();
+        });
+    }
+
     function addTextBlock(afterIndex) {
         const block = { id: genId(), type: 'text', content: '' };
         if (afterIndex === undefined || afterIndex >= blocks.length - 1) {
@@ -374,6 +458,7 @@
 
     addFirstText?.addEventListener('click', () => addTextBlock());
     addTextBottom.addEventListener('click', () => addTextBlock());
+    document.getElementById('add-video-bottom')?.addEventListener('click', () => addVideoBlock());
 
     function scheduleSave() {
         if (saveTimer) clearTimeout(saveTimer);
@@ -381,9 +466,39 @@
         saveTimer = setTimeout(save, 1500);
     }
 
+    const totalDurationEl = document.getElementById('total-duration');
+    const metaFecha  = document.getElementById('show-fecha');
+    const metaSala   = document.getElementById('show-sala');
+    const metaCiudad = document.getElementById('show-ciudad');
+
+    function updateTotalDuration() {
+        if (!totalDurationEl) return;
+        const total = blocks.reduce((sum, b) => {
+            if (b.type !== 'joke' || !b.jokeData) return sum;
+            return sum + (b.jokeData.duracion || 0);
+        }, 0);
+        if (total === 0) { totalDurationEl.textContent = ''; return; }
+        const m = Math.floor(total / 60);
+        const s = total % 60;
+        totalDurationEl.textContent = m + 'min' + (s ? ' ' + s + 's' : '');
+    }
+
+    function getMeta() {
+        return {
+            fecha_show: metaFecha  ? metaFecha.value  : '',
+            sala:       metaSala   ? metaSala.value   : '',
+            ciudad:     metaCiudad ? metaCiudad.value : '',
+        };
+    }
+
+    [metaFecha, metaSala, metaCiudad].forEach(el => {
+        if (el) el.addEventListener('input', scheduleSave);
+    });
+
     async function save() {
-        const titulo = titleInput.value.trim() || 'Show sin título';
+        const titulo    = titleInput.value.trim() || 'Show sin título';
         const contenido = { blocks: blocks.map(serializeBlock) };
+        const meta      = getMeta();
 
         try {
             let res;
@@ -391,13 +506,13 @@
                 res = await fetch(BASE_URL + '/api/shows.php?id=' + showId, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ titulo, contenido }),
+                    body: JSON.stringify({ titulo, contenido, ...meta }),
                 });
             } else {
                 res = await fetch(BASE_URL + '/api/shows.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ titulo, contenido }),
+                    body: JSON.stringify({ titulo, contenido, ...meta }),
                 });
                 if (res.ok) {
                     const data = await res.json();
@@ -415,9 +530,25 @@
     }
 
     function serializeBlock(b) {
-        if (b.type === 'text') return { id: b.id, type: 'text', content: b.content || '' };
-        if (b.type === 'joke') return { id: b.id, type: 'joke', joke_id: b.joke_id, estrellas_reales: b.estrellas_reales ?? null };
+        if (b.type === 'text')  return { id: b.id, type: 'text',  content: b.content || '' };
+        if (b.type === 'joke')  return { id: b.id, type: 'joke',  joke_id: b.joke_id, estrellas_reales: b.estrellas_reales ?? null, notas: b.notas || '' };
+        if (b.type === 'video') return { id: b.id, type: 'video', url: b.url || '' };
         return b;
+    }
+
+    function youtubeId(url) {
+        if (!url) return null;
+        const patterns = [
+            /[?&]v=([a-zA-Z0-9_-]{11})/,
+            /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+            /embed\/([a-zA-Z0-9_-]{11})/,
+            /shorts\/([a-zA-Z0-9_-]{11})/,
+        ];
+        for (const re of patterns) {
+            const m = url.match(re);
+            if (m) return m[1];
+        }
+        return null;
     }
 
     function syncRealStars(container, val) {
@@ -435,6 +566,63 @@
         if (saveTimer) clearTimeout(saveTimer);
         save();
     });
+
+    const cloneBtn = document.getElementById('clone-show-btn');
+    if (cloneBtn) {
+        cloneBtn.addEventListener('click', async () => {
+            if (!showId) return;
+            cloneBtn.disabled = true;
+            try {
+                const res  = await fetch(BASE_URL + '/api/shows.php?action=clone&id=' + showId, { method: 'POST' });
+                const data = await res.json();
+                if (data.id) window.open(BASE_URL + '/show_editor.php?id=' + data.id, '_blank');
+            } catch(_) {
+                alert('Error al clonar el show');
+            } finally {
+                cloneBtn.disabled = false;
+            }
+        });
+    }
+
+    const exportTextBtn = document.getElementById('export-text-btn');
+    if (exportTextBtn) {
+        exportTextBtn.addEventListener('click', () => {
+            const titulo = titleInput.value.trim() || 'Show';
+            const meta   = getMeta();
+            const lines  = [titulo];
+            if (meta.fecha_show || meta.sala || meta.ciudad) {
+                lines.push([meta.fecha_show, meta.sala, meta.ciudad].filter(Boolean).join(' · '));
+            }
+            lines.push('');
+
+            let totalSec = 0;
+            blocks.forEach((b, i) => {
+                if (b.type === 'text') {
+                    const txt = b.content.replace(/<[^>]+>/g, '').trim();
+                    if (txt) lines.push('--- ' + txt + ' ---');
+                } else if (b.type === 'joke' && b.jokeData) {
+                    const dur = b.jokeData.duracion;
+                    const durStr = dur ? ' [' + Math.floor(dur/60) + 'min' + (dur%60 ? dur%60+'s' : '') + ']' : '';
+                    totalSec += dur || 0;
+                    const stars = b.jokeData.puntuacion != null ? ' (' + '★'.repeat(b.jokeData.puntuacion) + ')' : '';
+                    lines.push((i + 1) + '. ' + b.jokeData.texto.slice(0, 80) + (b.jokeData.texto.length > 80 ? '…' : '') + durStr + stars);
+                }
+            });
+
+            if (totalSec) {
+                lines.push('');
+                lines.push('Total: ' + Math.floor(totalSec/60) + 'min' + (totalSec%60 ? ' ' + totalSec%60 + 's' : ''));
+            }
+
+            const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href     = url;
+            a.download = titulo.replace(/[^a-z0-9áéíóúñ ]/gi, '_') + '.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+    }
 
     titleInput.addEventListener('input', scheduleSave);
 
@@ -463,7 +651,7 @@
     }
 
     function estadoLabel(e) {
-        return { borrador: 'Borrador', desarrollo: 'En desarrollo', probado: 'Probado', retirado: 'Retirado' }[e] || e;
+        return { borrador: 'Borrador', desarrollo: 'En desarrollo', probado: 'Probado', rotacion: 'En rotación', retirado: 'Retirado' }[e] || e;
     }
 
     const chartPanel  = document.getElementById('chart-panel');
@@ -482,6 +670,15 @@
         document.getElementById('joke-popup-texto').textContent  = joke.texto;
         const tagsEl = document.getElementById('joke-popup-tags');
         tagsEl.innerHTML = (joke.tags || []).map(t => '<span class="tag">' + escHtml(t) + '</span>').join('');
+        const durEl = document.getElementById('joke-popup-dur');
+        if (durEl) {
+            const d = joke.duracion;
+            durEl.textContent = d ? Math.floor(d/60) + 'min' + (d%60 ? ' ' + d%60 + 's' : '') : '';
+            durEl.style.display = d ? '' : 'none';
+        }
+        const editLink = document.getElementById('joke-popup-edit');
+        if (editLink) editLink.href = BASE_URL + '/chiste_form.php?id=' + joke.id;
+        jokePopupOverlay.style.zIndex = '600';
         jokePopupOverlay.style.display = 'flex';
     }
 
@@ -569,7 +766,7 @@
                 },
                 scales: {
                     y: {
-                        min: 0, max: 5,
+                        min: 0, max: 5.8,
                         ticks: { display: false },
                         grid: { color: border },
                     },
@@ -599,6 +796,7 @@
         chartToggle.classList.toggle('active', chartOpen);
         if (chartOverlay) chartOverlay.classList.toggle('active', chartOpen);
         if (chartOpen) {
+            chartPanel.style.height = Math.round(window.innerHeight * 0.5) + 'px';
             requestAnimationFrame(renderChart);
         } else {
             closeChart();
@@ -616,33 +814,24 @@
         });
     }
 
-    const resizeHandle = document.getElementById('chart-resize-handle');
-    let resizing = false;
-    let resizeStartY = 0;
-    let resizeStartH = 0;
+    const STEP = Math.round(window.innerHeight * 0.15);
+    const minH = 160;
+    const maxH = () => Math.round(window.innerHeight * 0.92);
 
-    resizeHandle.addEventListener('mousedown', e => {
-        if (!chartOpen) return;
-        resizing = true;
-        resizeStartY = e.clientY;
-        resizeStartH = chartPanel.offsetHeight;
-        chartPanel.classList.add('resizing');
-        e.preventDefault();
-    });
+    function currentPanelHeight() {
+        return chartPanel.offsetHeight || Math.round(window.innerHeight * 0.75);
+    }
 
-    document.addEventListener('mousemove', e => {
-        if (!resizing) return;
-        const delta = resizeStartY - e.clientY;
-        const newH  = Math.max(120, Math.min(600, resizeStartH + delta));
-        chartPanel.style.height = newH + 'px';
-    });
-
-    document.addEventListener('mouseup', () => {
-        if (!resizing) return;
-        resizing = false;
-        chartPanel.classList.remove('resizing');
+    function setPanelHeight(h) {
+        const clamped = Math.max(minH, Math.min(maxH(), h));
+        chartPanel.style.height = clamped + 'px';
         if (chartInstance) chartInstance.resize();
-    });
+    }
+
+    const growBtn   = document.getElementById('chart-panel-grow');
+    const shrinkBtn = document.getElementById('chart-panel-shrink');
+    if (growBtn)   growBtn.addEventListener('click',   () => setPanelHeight(currentPanelHeight() + STEP));
+    if (shrinkBtn) shrinkBtn.addEventListener('click', () => setPanelHeight(currentPanelHeight() - STEP));
 
     init();
 }());

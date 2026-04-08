@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidad · Showrganizer</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:         #111318;
+            --bg2:        #1a1d25;
+            --bg3:        #222630;
+            --border:     #2e3240;
+            --text:       #e2e4ea;
+            --text-muted: #7a7f92;
+            --accent:     #f0a030;
+            --radius: 6px;
+            --font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+        }
+
+        html.light {
+            --bg:         #f4f5f8;
+            --bg2:        #ffffff;
+            --bg3:        #eaecf2;
+            --border:     #d0d4df;
+            --text:       #1a1d26;
+            --text-muted: #6b7280;
+            --accent:     #c87010;
+        }
+
+        html { font-size: 15px; }
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .page-header {
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .brand {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-decoration: none;
+            letter-spacing: 0.01em;
+        }
+
+        .brand:hover { opacity: 0.85; }
+
+        .page-header-sep {
+            color: var(--border);
+            font-size: 1.2rem;
+        }
+
+        .page-header-title {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        .content {
+            max-width: 760px;
+            margin: 3rem auto;
+            padding: 0 1.5rem 4rem;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+            color: var(--text);
+        }
+
+        .last-updated {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent);
+            margin: 2rem 0 0.75rem;
+        }
+
+        p {
+            margin-bottom: 0.9rem;
+            color: var(--text);
+        }
+
+        ul {
+            margin: 0.5rem 0 0.9rem 1.4rem;
+        }
+
+        ul li {
+            margin-bottom: 0.4rem;
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .card p:last-child { margin-bottom: 0; }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 2rem 0;
+        }
+
+        .theme-toggle {
+            margin-left: auto;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            padding: 0.3rem 0.6rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+    </style>
+    <script>
+        (function(){
+            var t = localStorage.getItem('theme');
+            if (t === 'light') document.documentElement.classList.add('light');
+        }());
+    </script>
+</head>
+<body>
+
+<header class="page-header">
+    <a href="/" class="brand">Showrganizer</a>
+    <span class="page-header-sep">/</span>
+    <span class="page-header-title">Política de Privacidad</span>
+    <button class="theme-toggle" id="theme-toggle" aria-label="Cambiar tema">☀️</button>
+</header>
+
+<div class="content">
+    <h1>Política de Privacidad</h1>
+    <p class="last-updated">Última actualización: abril de 2026</p>
+
+    <div class="card">
+        <p>Showrganizer es una herramienta personal para que cómicos organicen sus chistes y shows. Esta política explica qué datos se recopilan, cómo se usan y qué derechos tienes sobre ellos.</p>
+    </div>
+
+    <h2>1. Quién es el responsable</h2>
+    <p>Showrganizer es una aplicación gestionada de forma independiente. Si tienes dudas sobre el tratamiento de tus datos, puedes contactar al administrador de la aplicación.</p>
+
+    <h2>2. Qué datos recopilamos</h2>
+    <p>Al acceder a Showrganizer mediante tu cuenta de Google, obtenemos los siguientes datos de tu perfil público de Google:</p>
+    <ul>
+        <li>Nombre completo</li>
+        <li>Dirección de correo electrónico</li>
+        <li>Foto de perfil (si está disponible)</li>
+    </ul>
+    <p>El contenido que introduces en la aplicación (chistes, shows, categorías, etiquetas, etc.) se envía directamente a <strong>Google Drive</strong> a través de la API de Google Sheets y nunca se almacena en los servidores de Showrganizer.</p>
+
+    <h2>3. Cómo usamos tus datos</h2>
+    <p>Los datos se usan exclusivamente para:</p>
+    <ul>
+        <li>Identificarte y mantenerte autenticado durante tu sesión</li>
+        <li>Leer y escribir el contenido que creas en tu Google Drive</li>
+    </ul>
+    <p>No utilizamos tus datos para publicidad, análisis de marketing ni los compartimos con terceros.</p>
+
+    <h2>4. Dónde se almacenan los datos</h2>
+    <p>Todo el contenido de la aplicación (chistes, shows, categorías, etc.) se almacena <strong>exclusivamente en Google Drive</strong>, mediante hojas de cálculo de Google Sheets. Showrganizer actúa como interfaz: lee y escribe datos directamente en Drive a través de la API de Google, sin guardar ningún contenido en sus propios servidores.</p>
+    <p>Los únicos datos que residen temporalmente en el servidor de Showrganizer son los datos de sesión (identificador de usuario y token de acceso), que se eliminan automáticamente al cerrar sesión o al expirar la sesión.</p>
+    <p>Al usar Google Drive y Google Sheets como almacenamiento, tus datos quedan sujetos a la <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Política de Privacidad de Google</a>.</p>
+
+    <h2>5. Autenticación con Google (OAuth 2.0)</h2>
+    <p>El acceso a Showrganizer se realiza a través de <strong>Google OAuth 2.0</strong>. Showrganizer solicita los permisos necesarios para identificarte y para leer y escribir en las hojas de cálculo de Google Drive donde se guarda tu contenido. No accedemos a tu correo, contactos ni a ningún otro archivo de Drive que no sea el asociado a la aplicación.</p>
+    <p>Puedes revocar el acceso de Showrganizer a tu cuenta de Google en cualquier momento desde <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">Gestión de aplicaciones de Google</a>.</p>
+
+    <h2>6. Cookies y sesiones</h2>
+    <p>Showrganizer utiliza una cookie de sesión para mantenerte autenticado mientras usas la aplicación. Esta cookie:</p>
+    <ul>
+        <li>Es estrictamente necesaria para el funcionamiento del servicio</li>
+        <li>No se usa con fines de seguimiento ni publicidad</li>
+        <li>Expira automáticamente tras un período de inactividad (máximo 8 horas)</li>
+    </ul>
+    <p>También se utiliza <code>localStorage</code> del navegador para recordar tu preferencia de tema (claro/oscuro). Este dato no se envía al servidor.</p>
+
+    <h2>7. Tus derechos</h2>
+    <p>Tienes derecho a:</p>
+    <ul>
+        <li><strong>Acceder</strong> a los datos que tenemos sobre ti</li>
+        <li><strong>Rectificar</strong> cualquier dato incorrecto</li>
+        <li><strong>Eliminar</strong> tu cuenta y todo el contenido asociado</li>
+        <li><strong>Oponerte</strong> al tratamiento de tus datos</li>
+    </ul>
+    <p>Para ejercer cualquiera de estos derechos, contacta al administrador de la aplicación.</p>
+
+    <h2>8. Retención de datos</h2>
+    <p>El contenido que introduces (chistes, shows, etc.) reside en tu Google Drive y permanece allí de forma indefinida mientras no lo elimines tú mismo o revoques el acceso de la aplicación. Los datos de sesión en el servidor de Showrganizer se eliminan automáticamente al cerrar sesión o al expirar la sesión.</p>
+
+    <h2>9. Seguridad</h2>
+    <p>Aplicamos medidas técnicas razonables para proteger tus datos: comunicaciones cifradas mediante HTTPS, sesiones con tiempo de expiración y acceso restringido al almacenamiento. Sin embargo, ningún sistema es completamente infalible.</p>
+
+    <h2>10. Cambios en esta política</h2>
+    <p>Podemos actualizar esta política ocasionalmente. Si los cambios son significativos, lo notificaremos dentro de la aplicación. La fecha de la última actualización siempre estará visible al inicio de este documento.</p>
+
+    <hr>
+
+    <p style="color: var(--text-muted); font-size: 0.875rem;">Si tienes alguna pregunta sobre esta política de privacidad o sobre el tratamiento de tus datos, contacta al administrador de Showrganizer.</p>
+</div>
+
+<script>
+    (function(){
+        var btn = document.getElementById('theme-toggle');
+        function update(){
+            var light = document.documentElement.classList.contains('light');
+            btn.textContent = light ? '🌙' : '☀️';
+        }
+        update();
+        btn.addEventListener('click', function(){
+            var isLight = document.documentElement.classList.toggle('light');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            update();
+        });
+    }());
+</script>
+
+</body>
+</html>

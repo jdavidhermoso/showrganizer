@@ -110,6 +110,8 @@
                     estado:     estSel.value,
                     puntuacion: punInput.value ? parseInt(punInput.value) : null,
                     tags:       tags,
+                    duracion:   null,
+                    callbacks:  [],
                 }),
             });
             var data = await res.json();

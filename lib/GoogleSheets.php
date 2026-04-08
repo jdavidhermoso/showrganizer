@@ -10,8 +10,8 @@ class GoogleSheets {
     const SHEETS_BASE = 'https://sheets.googleapis.com/v4/spreadsheets';
     const DRIVE_BASE  = 'https://www.googleapis.com/drive/v3';
 
-    const COL_CHISTE = ['id','texto','categoria','puntuacion','estado','tags','fecha_creacion','fecha_actualizacion'];
-    const COL_SHOW   = ['id','titulo','contenido','fecha_creacion','fecha_actualizacion'];
+    const COL_CHISTE = ['id','texto','categoria','puntuacion','estado','tags','fecha_creacion','fecha_actualizacion','duracion','callbacks'];
+    const COL_SHOW   = ['id','titulo','contenido','fecha_creacion','fecha_actualizacion','fecha_show','sala','ciudad'];
 
     public function __construct() {
         session_start_safe();
@@ -160,6 +160,8 @@ class GoogleSheets {
             json_encode($data['tags'] ?? [], JSON_UNESCAPED_UNICODE),
             $now,
             $now,
+            isset($data['duracion']) && $data['duracion'] !== '' && $data['duracion'] !== null ? (int)$data['duracion'] : '',
+            json_encode($data['callbacks'] ?? [], JSON_UNESCAPED_UNICODE),
         ]);
         return $id;
     }
@@ -182,6 +184,8 @@ class GoogleSheets {
             json_encode($data['tags'] ?? [], JSON_UNESCAPED_UNICODE),
             $row['fecha_creacion'],
             date('c'),
+            isset($data['duracion']) && $data['duracion'] !== '' && $data['duracion'] !== null ? (int)$data['duracion'] : '',
+            json_encode($data['callbacks'] ?? [], JSON_UNESCAPED_UNICODE),
         ]);
     }
 
@@ -204,6 +208,8 @@ class GoogleSheets {
             'tags'                => json_decode($row['tags'] ?: '[]', true) ?? [],
             'fecha_creacion'      => $row['fecha_creacion'],
             'fecha_actualizacion' => $row['fecha_actualizacion'],
+            'duracion'            => ($row['duracion'] ?? '') !== '' ? (int)$row['duracion'] : null,
+            'callbacks'           => json_decode($row['callbacks'] ?? '[]' ?: '[]', true) ?? [],
         ];
     }
 
@@ -228,6 +234,9 @@ class GoogleSheets {
             isset($data['contenido']) ? json_encode($data['contenido'], JSON_UNESCAPED_UNICODE) : '',
             $now,
             $now,
+            $data['fecha_show'] ?? '',
+            $data['sala']       ?? '',
+            $data['ciudad']     ?? '',
         ]);
         return $id;
     }
@@ -246,7 +255,50 @@ class GoogleSheets {
             isset($data['contenido']) ? json_encode($data['contenido'], JSON_UNESCAPED_UNICODE) : $row['contenido'],
             $row['fecha_creacion'],
             date('c'),
+            array_key_exists('fecha_show', $data) ? ($data['fecha_show'] ?? '') : ($row['fecha_show'] ?? ''),
+            array_key_exists('sala', $data)       ? ($data['sala']       ?? '') : ($row['sala']       ?? ''),
+            array_key_exists('ciudad', $data)     ? ($data['ciudad']     ?? '') : ($row['ciudad']     ?? ''),
         ]);
+    }
+
+    public function cloneShow(string $id): string {
+        $original = $this->getShowById($id);
+        if (!$original) throw new RuntimeException("Show $id no encontrado");
+        $newId  = self::uuid();
+        $now    = date('c');
+        $this->appendRow('shows', [
+            $newId,
+            $original['titulo'] . ' (copia)',
+            $original['contenido'] ? json_encode($original['contenido'], JSON_UNESCAPED_UNICODE) : '',
+            $now,
+            $now,
+            '',
+            $original['sala']   ?? '',
+            $original['ciudad'] ?? '',
+        ]);
+        return $newId;
+    }
+
+    public function getShowsByJokeId(string $jokeId): array {
+        $result = [];
+        foreach ($this->getAllShows() as $show) {
+            $blocks = $show['contenido']['blocks'] ?? [];
+            foreach ($blocks as $block) {
+                if (($block['type'] ?? '') === 'joke' && ($block['joke_id'] ?? '') === $jokeId) {
+                    $result[] = [
+                        'id'        => $show['id'],
+                        'titulo'    => $show['titulo'],
+                        'fecha_show'=> $show['fecha_show'] ?? '',
+                        'sala'      => $show['sala']       ?? '',
+                        'ciudad'    => $show['ciudad']     ?? '',
+                        'estrellas_reales' => $block['estrellas_reales'] ?? null,
+                        'notas'     => $block['notas']     ?? '',
+                    ];
+                    break;
+                }
+            }
+        }
+        return $result;
     }
 
     public function deleteShow(string $id): void {
@@ -265,6 +317,9 @@ class GoogleSheets {
             'contenido'           => $row['contenido'] ? json_decode($row['contenido'], true) : null,
             'fecha_creacion'      => $row['fecha_creacion'],
             'fecha_actualizacion' => $row['fecha_actualizacion'],
+            'fecha_show'          => $row['fecha_show'] ?? '',
+            'sala'                => $row['sala']       ?? '',
+            'ciudad'              => $row['ciudad']     ?? '',
         ];
     }
 
@@ -345,8 +400,8 @@ class GoogleSheets {
         $spreadsheetId = $data['spreadsheetId'];
 
         $headers = [
-            'chistes'    => [self::COL_CHISTE],
-            'shows'      => [self::COL_SHOW],
+            'chistes'    => [['id','texto','categoria','puntuacion','estado','tags','fecha_creacion','fecha_actualizacion','duracion','callbacks']],
+            'shows'      => [['id','titulo','contenido','fecha_creacion','fecha_actualizacion','fecha_show','sala','ciudad']],
             'categorias' => [['nombre']],
             'tags'       => [['nombre']],
         ];

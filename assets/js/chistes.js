@@ -10,6 +10,7 @@
     const fEstado = document.getElementById('filter-estado');
     const fCat    = document.getElementById('filter-categoria');
     const fPun    = document.getElementById('filter-puntuacion');
+    const fSort   = document.getElementById('filter-sort');
     const btnClr  = document.getElementById('filter-clear');
 
     async function load() {
@@ -55,7 +56,7 @@
         card.dataset.texto      = j.texto.toLowerCase();
 
         node.querySelector('.chiste-categoria').textContent = j.categoria || '—';
-        node.querySelector('.chiste-stars').innerHTML = starsHtml(j.puntuacion);
+        node.querySelector('.chiste-stars').innerHTML = starsHtml(j.puntuacion) + (j.duracion ? ' <span class="chiste-dur">' + durStr(j.duracion) + '</span>' : '');
         node.querySelector('.chiste-texto').textContent = j.texto;
 
         const tagsEl = node.querySelector('.chiste-tags');
@@ -84,8 +85,9 @@
         const estado = fEstado.value;
         const cat    = fCat.value;
         const pun    = fPun.value;
+        const sort   = fSort ? fSort.value : 'reciente';
 
-        const filtered = allJokes.filter(j => {
+        let filtered = allJokes.filter(j => {
             if (q && !j.texto.toLowerCase().includes(q) &&
                 !(j.categoria || '').toLowerCase().includes(q) &&
                 !(j.tags || []).some(t => t.toLowerCase().includes(q))) return false;
@@ -97,6 +99,19 @@
             }
             return true;
         });
+
+        filtered.sort((a, b) => {
+            switch (sort) {
+                case 'antiguos':        return (a.fecha_creacion || '') > (b.fecha_creacion || '') ? 1 : -1;
+                case 'puntuacion-desc': return (b.puntuacion ?? -1) - (a.puntuacion ?? -1);
+                case 'puntuacion-asc':  return (a.puntuacion ?? 99) - (b.puntuacion ?? 99);
+                case 'duracion-desc':   return (b.duracion ?? -1) - (a.duracion ?? -1);
+                case 'duracion-asc':    return (a.duracion ?? 99999) - (b.duracion ?? 99999);
+                case 'az':              return a.texto.localeCompare(b.texto, 'es');
+                default:                return (a.fecha_creacion || '') < (b.fecha_creacion || '') ? 1 : -1;
+            }
+        });
+
         renderList(filtered);
     }
 
@@ -104,8 +119,10 @@
     fEstado.addEventListener('change', applyFilters);
     fCat.addEventListener('change', applyFilters);
     fPun.addEventListener('change', applyFilters);
+    if (fSort) fSort.addEventListener('change', applyFilters);
     btnClr.addEventListener('click', () => {
         fText.value = ''; fEstado.value = ''; fCat.value = ''; fPun.value = '';
+        if (fSort) fSort.value = 'reciente';
         renderList(allJokes);
     });
 
@@ -124,8 +141,14 @@
         return s + '</span>';
     }
 
+    function durStr(sec) {
+        if (!sec) return '';
+        const m = Math.floor(sec / 60), s = sec % 60;
+        return m + 'min' + (s ? s + 's' : '');
+    }
+
     function estadoLabel(e) {
-        return { borrador: 'Borrador', desarrollo: 'En desarrollo', probado: 'Probado', retirado: 'Retirado' }[e] || e;
+        return { borrador: 'Borrador', desarrollo: 'En desarrollo', probado: 'Probado', rotacion: 'En rotación', retirado: 'Retirado' }[e] || e;
     }
 
     load();

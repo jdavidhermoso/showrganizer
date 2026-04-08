@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Términos y Condiciones · Showrganizer</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:         #111318;
+            --bg2:        #1a1d25;
+            --bg3:        #222630;
+            --border:     #2e3240;
+            --text:       #e2e4ea;
+            --text-muted: #7a7f92;
+            --accent:     #f0a030;
+            --radius: 6px;
+            --font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+        }
+
+        html.light {
+            --bg:         #f4f5f8;
+            --bg2:        #ffffff;
+            --bg3:        #eaecf2;
+            --border:     #d0d4df;
+            --text:       #1a1d26;
+            --text-muted: #6b7280;
+            --accent:     #c87010;
+        }
+
+        html { font-size: 15px; }
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .page-header {
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .brand {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-decoration: none;
+            letter-spacing: 0.01em;
+        }
+
+        .brand:hover { opacity: 0.85; }
+
+        .page-header-sep {
+            color: var(--border);
+            font-size: 1.2rem;
+        }
+
+        .page-header-title {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        .content {
+            max-width: 760px;
+            margin: 3rem auto;
+            padding: 0 1.5rem 4rem;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+            color: var(--text);
+        }
+
+        .last-updated {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent);
+            margin: 2rem 0 0.75rem;
+        }
+
+        p {
+            margin-bottom: 0.9rem;
+            color: var(--text);
+        }
+
+        ul {
+            margin: 0.5rem 0 0.9rem 1.4rem;
+        }
+
+        ul li {
+            margin-bottom: 0.4rem;
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .card p:last-child { margin-bottom: 0; }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 2rem 0;
+        }
+
+        .theme-toggle {
+            margin-left: auto;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            padding: 0.3rem 0.6rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+    </style>
+    <script>
+        (function(){
+            var t = localStorage.getItem('theme');
+            if (t === 'light') document.documentElement.classList.add('light');
+        }());
+    </script>
+</head>
+<body>
+
+<header class="page-header">
+    <a href="/" class="brand">Showrganizer</a>
+    <span class="page-header-sep">/</span>
+    <span class="page-header-title">Términos y Condiciones</span>
+    <button class="theme-toggle" id="theme-toggle" aria-label="Cambiar tema">☀️</button>
+</header>
+
+<div class="content">
+    <h1>Términos y Condiciones</h1>
+    <p class="last-updated">Última actualización: abril de 2026</p>
+
+    <div class="card">
+        <p>Showrganizer es una herramienta para que cómicos organicen su material. Al usar la aplicación aceptas estos términos. Si no estás de acuerdo, no uses el servicio.</p>
+    </div>
+
+    <h2>1. Qué es Showrganizer</h2>
+    <p>Showrganizer es una aplicación web que permite a cómicos gestionar chistes, shows y setlists. El acceso está restringido a usuarios con cuenta de Google autorizados por el administrador.</p>
+
+    <h2>2. Acceso al servicio</h2>
+    <p>El acceso se realiza exclusivamente mediante Google OAuth 2.0. Al autenticarte, aceptas que Showrganizer lea y escriba en una hoja de cálculo de tu Google Drive en tu nombre. Puedes revocar este acceso en cualquier momento desde <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">Gestión de aplicaciones de Google</a>.</p>
+
+    <h2>3. Tu contenido</h2>
+    <p>Todo el contenido que introduces en Showrganizer (chistes, shows, categorías, etiquetas, etc.) es tuyo. Showrganizer no reclama ningún derecho sobre él.</p>
+    <p>Dicho contenido se almacena en tu Google Drive, no en los servidores de Showrganizer. Eres el único responsable de lo que introduces y del acceso que concedes a esa hoja de cálculo desde Google Drive.</p>
+
+    <h2>4. Uso aceptable</h2>
+    <p>Te comprometes a no usar Showrganizer para:</p>
+    <ul>
+        <li>Introducir contenido ilegal o que infrinja derechos de terceros</li>
+        <li>Intentar acceder a datos de otros usuarios</li>
+        <li>Realizar ataques, scraping automatizado o cualquier acción que sobrecargue el servicio</li>
+        <li>Eludir los mecanismos de autenticación</li>
+    </ul>
+
+    <h2>5. Disponibilidad</h2>
+    <p>Showrganizer se ofrece sin garantías de disponibilidad continua. El servicio puede interrumpirse por mantenimiento, fallos técnicos o causas ajenas al administrador, incluidas interrupciones de la API de Google.</p>
+
+    <h2>6. Limitación de responsabilidad</h2>
+    <p>Showrganizer se proporciona tal cual, sin garantías de ningún tipo. El administrador no se hace responsable de:</p>
+    <ul>
+        <li>Pérdida o corrupción de datos almacenados en Google Drive</li>
+        <li>Interrupciones del servicio de Google Sheets o Google Drive</li>
+        <li>Daños directos o indirectos derivados del uso o la imposibilidad de uso de la aplicación</li>
+    </ul>
+    <p>En cualquier caso, la responsabilidad máxima del administrador se limita a lo permitido por la legislación aplicable.</p>
+
+    <h2>7. Propiedad intelectual</h2>
+    <p>El código fuente de Showrganizer está disponible públicamente en <a href="https://github.com/jdavidhermoso/showrganizer" target="_blank" rel="noopener noreferrer">GitHub</a>. Su uso está sujeto a la licencia que se indica en el repositorio.</p>
+    <p>El nombre, diseño y marca Showrganizer son propiedad del administrador.</p>
+
+    <h2>8. Modificaciones</h2>
+    <p>El administrador puede modificar estos términos en cualquier momento. Los cambios entrarán en vigor en el momento de su publicación. El uso continuado de la aplicación tras la publicación de los cambios implica la aceptación de los nuevos términos.</p>
+
+    <h2>9. Legislación aplicable</h2>
+    <p>Estos términos se rigen por la legislación española. Cualquier controversia se someterá a los juzgados y tribunales competentes en España.</p>
+
+    <hr>
+
+    <p style="color: var(--text-muted); font-size: 0.875rem;">
+        Para cualquier consulta sobre estos términos, contacta al administrador de Showrganizer.
+        Consulta también nuestra <a href="/privacy.html">Política de Privacidad</a>.
+    </p>
+</div>
+
+<script>
+    (function(){
+        var btn = document.getElementById('theme-toggle');
+        function update(){
+            var light = document.documentElement.classList.contains('light');
+            btn.textContent = light ? '🌙' : '☀️';
+        }
+        update();
+        btn.addEventListener('click', function(){
+            var isLight = document.documentElement.classList.toggle('light');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            update();
+        });
+    }());
+</script>
+
+</body>
+</html>

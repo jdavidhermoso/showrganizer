@@ -29,16 +29,22 @@ $page_title = $show ? h($show['titulo']) : 'Nuevo show';
 <body class="editor-body">
 
 <div class="editor-topbar">
-    <a href="<?= BASE_URL ?>/shows.php" class="editor-back">←</a>
+    <a href="<?= BASE_URL ?>/shows.php" class="editor-back" aria-label="Volver a shows">←</a>
     <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Abrir lista de chistes">☰ Chistes</button>
     <input type="text" id="show-titulo" class="editor-title-input"
            value="<?= $show ? h($show['titulo']) : '' ?>"
            placeholder="Título...">
-    <button class="theme-toggle" id="theme-toggle-editor" aria-label="Cambiar tema">☀️</button>
     <div class="editor-topbar-right">
+        <span id="total-duration" class="total-duration" title="Duración total estimada"></span>
         <span id="save-status" class="save-status"></span>
         <button id="save-btn" class="btn btn-primary">Guardar</button>
     </div>
+</div>
+
+<div id="show-meta-bar" class="show-meta-bar">
+    <input type="date" id="show-fecha" class="meta-input" value="<?= h($show['fecha_show'] ?? '') ?>" title="Fecha del show">
+    <input type="text" id="show-sala" class="meta-input" placeholder="Sala..." value="<?= h($show['sala'] ?? '') ?>">
+    <input type="text" id="show-ciudad" class="meta-input" placeholder="Ciudad..." value="<?= h($show['ciudad'] ?? '') ?>">
 </div>
 
 <div class="editor-layout">
@@ -53,6 +59,7 @@ $page_title = $show ? h($show['titulo']) : 'Nuevo show';
                 <option value="borrador">Borrador</option>
                 <option value="desarrollo">En desarrollo</option>
                 <option value="probado">Probado</option>
+                <option value="rotacion">En rotación</option>
                 <option value="retirado">Retirado</option>
             </select>
         </div>
@@ -64,9 +71,12 @@ $page_title = $show ? h($show['titulo']) : 'Nuevo show';
     <section class="editor-document">
         <div class="doc-add-bar">
             <button class="btn btn-ghost btn-sm" id="add-text-bottom">+ Texto</button>
-            <button id="chart-toggle" class="btn btn-ghost btn-sm" title="Ver arco del show">Aplausos esperados</button>
+            <button class="btn btn-ghost btn-sm" id="add-video-bottom">+ Video</button>
+            <button id="chart-toggle" class="btn btn-ghost btn-sm" title="Ver arco del show">Risas</button>
             <?php if ($id): ?>
             <a href="<?= BASE_URL ?>/show_print.php?id=<?= h($id) ?>" target="_blank" class="btn btn-ghost btn-sm">PDF</a>
+            <button id="export-text-btn" class="btn btn-ghost btn-sm" title="Exportar como texto">Texto</button>
+            <button id="clone-show-btn" class="btn btn-ghost btn-sm" title="Clonar show">Clonar</button>
             <?php endif; ?>
         </div>
         <div id="document-blocks" class="document-blocks">
@@ -83,10 +93,12 @@ $page_title = $show ? h($show['titulo']) : 'Nuevo show';
             <span id="joke-popup-cat" class="joke-block-category"></span>
             <span id="joke-popup-stars" class="joke-block-rating"></span>
             <span id="joke-popup-estado" class="estado"></span>
+            <span id="joke-popup-dur" class="chiste-dur"></span>
         </div>
         <p id="joke-popup-texto" class="joke-popup-texto"></p>
         <div id="joke-popup-tags" class="joke-block-tags"></div>
         <div class="modal-actions">
+            <a id="joke-popup-edit" href="" target="_blank" class="btn btn-ghost btn-sm">✏ Editar</a>
             <button id="joke-popup-close" class="btn btn-ghost">✕ Cerrar</button>
         </div>
     </div>
@@ -97,8 +109,12 @@ $page_title = $show ? h($show['titulo']) : 'Nuevo show';
     <div id="chart-resize-handle" class="chart-resize-handle"></div>
     <div class="chart-panel-inner">
         <div class="chart-panel-topbar">
-            <span class="chart-panel-label">Aplausos esperados — puntuación por chiste</span>
-            <button id="chart-panel-close" class="btn btn-ghost btn-sm">✕ Cerrar</button>
+            <span class="chart-panel-label">Risas esperados</span>
+            <div class="chart-panel-actions">
+                <button id="chart-panel-shrink" class="btn btn-ghost btn-sm" title="Reducir">↓</button>
+                <button id="chart-panel-grow"   class="btn btn-ghost btn-sm" title="Ampliar">↑</button>
+                <button id="chart-panel-close"  class="btn btn-ghost btn-sm">✕ Cerrar</button>
+            </div>
         </div>
         <canvas id="show-chart"></canvas>
     </div>
@@ -113,20 +129,11 @@ function closeSidebar() { sidebarEl.classList.remove('open'); sidebarOverlay.cla
 sidebarToggle.addEventListener('click', () => sidebarEl.classList.contains('open') ? closeSidebar() : openSidebar());
 sidebarOverlay.addEventListener('click', closeSidebar);
 
-(function(){
-    var btn = document.getElementById('theme-toggle-editor');
-    function update(){ btn.textContent = document.documentElement.classList.contains('light') ? '🌙' : '☀️'; }
-    update();
-    btn.addEventListener('click', function(){
-        var isLight = document.documentElement.classList.toggle('light');
-        localStorage.setItem('theme', isLight ? 'light' : 'dark');
-        update();
-    });
-}());
 
-const BASE_URL  = '<?= BASE_URL ?>';
-const SHOW_ID   = '<?= h($id) ?>';
-const SHOW_DATA = <?= ($show && $show['contenido']) ? json_encode($show['contenido']) : 'null' ?>;
+const BASE_URL   = '<?= BASE_URL ?>';
+const SHOW_ID    = '<?= h($id) ?>';
+const SHOW_DATA  = <?= ($show && $show['contenido']) ? json_encode($show['contenido']) : 'null' ?>;
+const SHOW_META  = <?= json_encode(['fecha_show' => $show['fecha_show'] ?? '', 'sala' => $show['sala'] ?? '', 'ciudad' => $show['ciudad'] ?? '']) ?>;
 </script>
 <script src="<?= BASE_URL ?>/assets/js/editor.js"></script>
 </body>
