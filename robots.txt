@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+Allow: /index.html
+Allow: /privacy.html
+
+Disallow: /dashboard.php
+Disallow: /chistes.php
+Disallow: /chiste_form.php
+Disallow: /shows.php
+Disallow: /show_editor.php
+Disallow: /show_print.php
+Disallow: /importar.php
+Disallow: /login.php
+Disallow: /logout.php
+Disallow: /oauth_callback.php
+Disallow: /api/
+Disallow: /data/
+Disallow: /includes/
+Disallow: /lib/
+
+Sitemap: https://standupcomedy.es/sitemap.xml

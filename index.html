@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Showrganizer · La herramienta para cómicos</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:         #111318;
+            --bg2:        #1a1d25;
+            --bg3:        #222630;
+            --border:     #2e3240;
+            --text:       #e2e4ea;
+            --text-muted: #7a7f92;
+            --accent:     #f0a030;
+            --radius:     8px;
+            --font:       system-ui, -apple-system, 'Segoe UI', sans-serif;
+        }
+
+        html.light {
+            --bg:         #f4f5f8;
+            --bg2:        #ffffff;
+            --bg3:        #eaecf2;
+            --border:     #d0d4df;
+            --text:       #1a1d26;
+            --text-muted: #6b7280;
+            --accent:     #c87010;
+        }
+
+        html { font-size: 16px; scroll-behavior: smooth; }
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* ── Navbar ── */
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            height: 56px;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .nav-brand img {
+            height: 36px;
+            width: 36px;
+            object-fit: cover;
+            object-position: center 10%;
+            border-radius: 6px;
+        }
+
+        .nav-by {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .nav-by a { color: var(--text-muted); }
+        .nav-by a:hover { color: var(--accent); text-decoration: underline; }
+
+        @media (max-width: 600px) {
+            .nav-by { display: none; }
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn-theme {
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 0.3rem;
+            border-radius: 6px;
+            line-height: 1;
+            transition: background 0.15s;
+        }
+        .btn-theme:hover { background: var(--bg3); }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.55rem 1.2rem;
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.15s, box-shadow 0.15s;
+            text-decoration: none;
+            border: none;
+        }
+        .btn:hover { opacity: 0.88; text-decoration: none; }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        /* ── Hero ── */
+        .hero {
+            text-align: center;
+            padding: 6rem 1.5rem 5rem;
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .hero-logo {
+            width: 140px;
+            height: 140px;
+            object-fit: cover;
+            object-position: center 10%;
+            border-radius: 24px;
+            margin: 0 auto 2rem;
+            display: block;
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 1.25rem;
+            letter-spacing: -0.02em;
+        }
+
+        .hero h1 span { color: var(--accent); }
+
+        .hero p {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            max-width: 560px;
+            margin: 0 auto 2.5rem;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* ── Features ── */
+        .section {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 5rem 1.5rem;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-sub {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 3.5rem;
+            font-size: 1rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.75rem;
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .feature-card h3 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-card p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ── How it works ── */
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0;
+            position: relative;
+        }
+
+        .step {
+            text-align: center;
+            padding: 1.5rem 1rem;
+            position: relative;
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 800;
+            font-size: 1.1rem;
+            margin: 0 auto 1rem;
+        }
+
+        .step h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+        }
+
+        .step p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* ── Status badges ── */
+        .badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .badge {
+            padding: 0.3rem 0.9rem;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-borrador   { background: rgba(122,127,146,0.15); color: #7a7f92; }
+        .badge-desarrollo { background: rgba(80,144,224,0.15);  color: #5090e0; }
+        .badge-probado    { background: rgba(80,200,120,0.15);  color: #50c878; }
+        .badge-rotacion   { background: rgba(224,157,32,0.15);  color: #e09d20; }
+        .badge-retirado   { background: rgba(224,80,80,0.15);   color: #e05050; }
+
+        /* ── CTA final ── */
+        .cta-section {
+            background: var(--bg2);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+            padding: 5rem 1.5rem;
+        }
+
+        .cta-section h2 {
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 1rem;
+        }
+
+        /* ── Footer ── */
+        .footer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 1.5rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .footer-sep { color: var(--border); }
+
+        .footer-github {
+            display: flex;
+            align-items: center;
+            color: var(--text-muted);
+        }
+        .footer-github:hover { color: var(--text); }
+
+        /* ── Divider ── */
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 600px) {
+            .nav { padding: 0 1rem; }
+            .hero { padding: 4rem 1rem 3rem; }
+            .hero-logo { width: 100px; height: 100px; border-radius: 18px; }
+            .section { padding: 3.5rem 1rem; }
+        }
+    </style>
+    <script>(function(){ var t = localStorage.getItem('theme'); if (t === 'light') document.documentElement.classList.add('light'); }());</script>
+</head>
+<body>
+
+<nav class="nav">
+    <a href="/" class="nav-brand">
+        <img src="assets/logo.webp" alt="Showrganizer">
+        Showrganizer
+    </a>
+    <span class="nav-by">Creado por <a href="https://www.instagram.com/jdavidhermoso" target="_blank" rel="noopener noreferrer">David Hermoso</a></span>
+    <div class="nav-right">
+        <button class="btn-theme" id="theme-btn" aria-label="Cambiar tema">☀️</button>
+        <a href="/login.php" class="btn btn-primary">Entrar</a>
+    </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+    <img src="assets/logo.webp" alt="Showrganizer" class="hero-logo">
+    <h1>Tu material, <span>siempre organizado</span></h1>
+    <p>Showrganizer es la herramienta para cómicos de stand-up que quieren gestionar sus chistes, construir setlists y analizar sus shows sin perder el tiempo.</p>
+    <div class="hero-cta">
+        <a href="/login.php" class="btn btn-primary">Empezar gratis</a>
+        <a href="#features" class="btn btn-ghost">Ver funcionalidades</a>
+    </div>
+</section>
+
+<hr class="divider">
+
+<!-- Features -->
+<section class="section" id="features">
+    <h2 class="section-title">Todo lo que necesitas sobre el escenario</h2>
+    <p class="section-sub">Sin hojas de cálculo caóticas. Sin notas de voz perdidas.</p>
+
+    <div class="features-grid">
+        <div class="feature-card">
+            <span class="feature-icon">📝</span>
+            <h3>Escribe y organiza tus chistes</h3>
+            <p>Guarda cada chiste con su texto, categoría, duración estimada, puntuación y etiquetas. Filtra y busca en segundos cuando los necesites.</p>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">🔄</span>
+            <h3>Ciclo de vida del material</h3>
+            <p>Cada chiste tiene un estado: Borrador, En desarrollo, Probado, En rotación o Retirado. Sabes exactamente en qué punto está cada pieza.</p>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">🎤</span>
+            <h3>Construye tus setlists</h3>
+            <p>Arrastra chistes para montar el orden de tu show. Añade bloques de texto para notas o transiciones. Visualiza la duración total en tiempo real.</p>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">📈</span>
+            <h3>Arco de risas</h3>
+            <p>Visualiza la curva de intensidad de tu show según la puntuación de cada chiste. Detecta los baches antes de subir al escenario.</p>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">📄</span>
+            <h3>Exporta tu show</h3>
+            <p>Genera un PDF limpio de tu setlist para llevarlo al escenario o compartirlo. También puedes exportarlo como texto plano.</p>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">📥</span>
+            <h3>Importa material existente</h3>
+            <p>¿Tienes chistes en un Word o en un .txt? Súbelo y Showrganizer los importa automáticamente, uno por párrafo.</p>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">☁️</span>
+            <h3>Tus datos en Google Drive</h3>
+            <p>Todo se guarda directamente en una hoja de cálculo de tu Google Drive. Sin servidores propios, sin suscripciones. Tus datos son tuyos.</p>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">🌙</span>
+            <h3>Tema claro y oscuro</h3>
+            <p>Diseñado para trabajar de noche entre shows. Cambia entre tema claro y oscuro con un solo toque desde cualquier página.</p>
+        </div>
+    </div>
+</section>
+
+<hr class="divider">
+
+<!-- How it works -->
+<section class="section">
+    <h2 class="section-title">Cómo funciona</h2>
+    <p class="section-sub">Listo en menos de un minuto.</p>
+
+    <div class="steps">
+        <div class="step">
+            <div class="step-number">1</div>
+            <h3>Entra con Google</h3>
+            <p>Sin registro. Tu cuenta de Google es todo lo que necesitas.</p>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <h3>Escribe tus chistes</h3>
+            <p>Añade material desde el dashboard o importa lo que ya tienes.</p>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <h3>Monta tu show</h3>
+            <p>Arrastra chistes, ajusta el orden y revisa la duración total.</p>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <h3>Sube al escenario</h3>
+            <p>Lleva el PDF o abre el show desde tu móvil. Todo sincronizado.</p>
+        </div>
+    </div>
+</section>
+
+<hr class="divider">
+
+<!-- Status section -->
+<section class="section" style="padding-top: 4rem; padding-bottom: 4rem;">
+    <h2 class="section-title">Sigue el ciclo de vida de tu material</h2>
+    <p class="section-sub">Cada chiste tiene su estado. Nunca más confundirás un borrador con tu mejor bit.</p>
+
+    <div class="badges">
+        <span class="badge badge-borrador">Borrador</span>
+        <span class="badge badge-desarrollo">En desarrollo</span>
+        <span class="badge badge-probado">Probado</span>
+        <span class="badge badge-rotacion">En rotación</span>
+        <span class="badge badge-retirado">Retirado</span>
+    </div>
+</section>
+
+<hr class="divider">
+
+<!-- CTA final -->
+<section class="cta-section">
+    <h2>Empieza a organizar tu material hoy</h2>
+    <p>Gratis. Sin instalación. Funciona desde el navegador.</p>
+    <a href="/login.php" class="btn btn-primary" style="font-size: 1.05rem; padding: 0.75rem 2rem;">
+        Entrar con Google
+    </a>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+    <a href="/privacy.html" style="color: var(--text-muted);">Política de privacidad</a>
+    <span class="footer-sep">·</span>
+    <a href="https://github.com/jdavidhermoso/showrganizer" target="_blank" rel="noopener noreferrer" class="footer-github" aria-label="GitHub">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.154-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.579.688.481C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+        </svg>
+    </a>
+</footer>
+
+<script>
+(function(){
+    var btn = document.getElementById('theme-btn');
+    function update(){
+        btn.textContent = document.documentElement.classList.contains('light') ? '🌙' : '☀️';
+    }
+    update();
+    btn.addEventListener('click', function(){
+        var isLight = document.documentElement.classList.toggle('light');
+        localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        update();
+    });
+}());
+</script>
+
+</body>
+</html>
