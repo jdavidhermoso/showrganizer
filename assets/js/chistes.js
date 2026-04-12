@@ -58,11 +58,11 @@
         card.dataset.estado     = j.estado;
         card.dataset.categoria  = j.categoria_id || '';
         card.dataset.puntuacion = j.puntuacion || '';
-        card.dataset.texto      = j.texto.toLowerCase();
+        card.dataset.texto      = j.texto.replace(/\*\*/g, '').toLowerCase();
 
         node.querySelector('.chiste-categoria').textContent = j.categoria || '—';
         node.querySelector('.chiste-stars').innerHTML = starsHtml(j.puntuacion) + (j.duracion ? ' <span class="chiste-dur">' + durStr(j.duracion) + '</span>' : '');
-        node.querySelector('.chiste-texto').textContent = j.texto;
+        node.querySelector('.chiste-texto').innerHTML = parseBold(j.texto);
 
         const tagsEl = node.querySelector('.chiste-tags');
         (j.tags || []).forEach(t => {
@@ -93,7 +93,7 @@
         const sort   = fSort ? fSort.value : 'reciente';
 
         let filtered = allJokes.filter(j => {
-            if (q && !j.texto.toLowerCase().includes(q) &&
+            if (q && !j.texto.replace(/\*\*/g,'').toLowerCase().includes(q) &&
                 !(j.categoria || '').toLowerCase().includes(q) &&
                 !(j.tags || []).some(t => t.toLowerCase().includes(q))) return false;
             if (estado && j.estado !== estado) return false;
@@ -137,6 +137,10 @@
         } else {
             window.open('https://www.threads.net/intent/post?text=' + encodeURIComponent(texto), '_blank');
         }
+    }
+
+    function parseBold(text) {
+        return escHtml(text).replace(/\*\*(.+?)\*\*/gs, '<strong>$1</strong>');
     }
 
     function starsHtml(n) {

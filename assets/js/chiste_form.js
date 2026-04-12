@@ -3,6 +3,34 @@
 
     var L = window.LANG || {};
 
+    // ── Bold toolbar ──────────────────────────────────────────
+    var boldBtn = document.getElementById('bold-btn');
+    var textoTA = document.getElementById('texto');
+
+    function applyBold() {
+        var start    = textoTA.selectionStart;
+        var end      = textoTA.selectionEnd;
+        if (start === end) return;
+        var before   = textoTA.value.substring(0, start);
+        var selected = textoTA.value.substring(start, end);
+        var after    = textoTA.value.substring(end);
+        if (selected.startsWith('**') && selected.endsWith('**') && selected.length > 4) {
+            var inner = selected.slice(2, -2);
+            textoTA.value = before + inner + after;
+            textoTA.setSelectionRange(start, start + inner.length);
+        } else {
+            textoTA.value = before + '**' + selected + '**' + after;
+            textoTA.setSelectionRange(start, end + 4);
+        }
+        textoTA.focus();
+    }
+
+    if (boldBtn) boldBtn.addEventListener('click', applyBold);
+    textoTA.addEventListener('keydown', function (e) {
+        if (e.key === 'b' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); applyBold(); }
+    });
+    // ─────────────────────────────────────────────────────────
+
     const starsInput = document.getElementById('stars-input');
     const punInput   = document.getElementById('puntuacion');
     const starBtns   = starsInput.querySelectorAll('.star-btn');

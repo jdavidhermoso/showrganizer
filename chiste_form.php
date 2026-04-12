@@ -29,6 +29,9 @@ include __DIR__ . '/includes/header.php';
 <form id="chiste-form" class="form-card" data-id="<?= h($id) ?>">
     <div class="form-group">
         <label for="texto"><?= h(t('joke_text_label')) ?></label>
+        <div class="text-toolbar">
+            <button type="button" class="text-tool-btn" id="bold-btn" title="<?= h(t('bold_tooltip')) ?> (Cmd+B)"><strong>B</strong></button>
+        </div>
         <textarea id="texto" name="texto" rows="8" required placeholder="<?= h(t('joke_text_ph')) ?>"><?= $chiste ? h($chiste['texto']) : '' ?></textarea>
     </div>
 
