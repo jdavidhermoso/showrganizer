@@ -42,6 +42,14 @@ function estado_label(string $estado): string {
     return isset($map[$estado]) ? t($map[$estado]) : $estado;
 }
 
+/**
+ * Converts **bold** markers in an already-HTML-escaped string to <strong> tags.
+ */
+function render_bold(string $escaped): string {
+    $out = preg_replace('/\*\*(.+?)\*\*/s', '<strong>$1</strong>', $escaped) ?? $escaped;
+    return preg_replace('/\n?\[PAUSA\]\n?/', '<span class="pausa-tag">— PAUSA —</span>', $out) ?? $out;
+}
+
 function redirect(string $path): void {
     header('Location: ' . BASE_URL . $path);
     exit;

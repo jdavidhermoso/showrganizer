@@ -5,6 +5,7 @@
 
     let blocks    = [];
     let allJokes  = [];
+    let allBloques = [];
     let showId    = SHOW_ID;
     let saveTimer = null;
     let chartInstance = null;
@@ -17,23 +18,31 @@
     const saveBtn       = document.getElementById('save-btn');
     const saveStatus    = document.getElementById('save-status');
     const titleInput    = document.getElementById('show-titulo');
-    const sidebarList   = document.getElementById('sidebar-jokes-list');
-    const sidebarSearch = document.getElementById('sidebar-search');
-    const sidebarEstado = document.getElementById('sidebar-estado');
+    const sidebarList      = document.getElementById('sidebar-jokes-list');
+    const sidebarSearch    = document.getElementById('sidebar-search');
+    const sidebarEstado    = document.getElementById('sidebar-estado');
+    const sidebarBloques   = document.getElementById('sidebar-bloques-list');
+    const panelChistes     = document.getElementById('sidebar-panel-chistes');
+    const panelBloques     = document.getElementById('sidebar-panel-bloques');
 
     async function init() {
-        await loadJokes();
+        await Promise.all([loadJokes(), loadBloques()]);
         if (SHOW_DATA && SHOW_DATA.blocks) {
             blocks = SHOW_DATA.blocks.map(b => {
                 if (b.type === 'joke') {
                     b.jokeData = allJokes.find(j => j.id === b.joke_id) || null;
                     b.notas    = b.notas || '';
                 }
+                if (b.type === 'bloque') {
+                    b.bloqueData = allBloques.find(bl => bl.id === b.bloque_id) || null;
+                }
                 return b;
             });
         }
         renderDocument();
         renderSidebar(allJokes);
+        renderBloquesSidebar();
+        initTabs();
     }
 
     async function loadJokes() {
@@ -43,6 +52,73 @@
         } catch (e) {
             sidebarList.innerHTML = '<p class="sidebar-loading" style="color:var(--danger)">' + (L.error_load_jokes || 'Error loading jokes.') + '</p>';
         }
+    }
+
+    async function loadBloques() {
+        try {
+            const res  = await fetch(BASE_URL + '/api/bloques.php');
+            allBloques = await res.json();
+        } catch (e) {
+            allBloques = [];
+        }
+    }
+
+    function initTabs() {
+        document.querySelectorAll('.sidebar-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const which = tab.dataset.tab;
+                panelChistes.style.display = which === 'chistes' ? '' : 'none';
+                panelBloques.style.display = which === 'bloques' ? '' : 'none';
+            });
+        });
+    }
+
+    function renderBloquesSidebar() {
+        sidebarBloques.innerHTML = '';
+        if (!allBloques.length) {
+            sidebarBloques.innerHTML = '<p class="sidebar-loading">' + (L.no_bloques_yet || 'No blocks yet.') + '</p>';
+            return;
+        }
+        allBloques.forEach(b => sidebarBloques.appendChild(makeBloqueCard(b)));
+    }
+
+    function makeBloqueCard(bloque) {
+        const div = document.createElement('div');
+        div.className = 'sidebar-bloque-card';
+        div.draggable = true;
+        div.dataset.bloqueId = bloque.id;
+
+        const count = bloque.chistes ? bloque.chistes.length : 0;
+        div.innerHTML =
+            '<div class="sidebar-bloque-name">' + escHtml(bloque.titulo) + '</div>' +
+            '<div class="sidebar-bloque-meta">' + count + ' ' + (L.jokes_count || 'jokes') + '</div>';
+
+        div.addEventListener('dragstart', e => {
+            e.dataTransfer.setData('text/block-source', 'bloque');
+            e.dataTransfer.setData('text/bloque-id', String(bloque.id));
+            div.classList.add('dragging');
+        });
+        div.addEventListener('dragend', () => div.classList.remove('dragging'));
+
+        div.addEventListener('click', () => {
+            addBloqueBlock(bloque);
+            if (typeof closeSidebar === 'function') closeSidebar();
+        });
+
+        return div;
+    }
+
+    function addBloqueBlock(bloque, insertAt) {
+        const newBlock = { id: genId(), type: 'bloque', bloque_id: bloque.id, bloqueData: bloque };
+        if (insertAt === undefined || insertAt >= blocks.length) {
+            blocks.push(newBlock);
+        } else {
+            blocks.splice(insertAt, 0, newBlock);
+        }
+        renderDocument();
+        scheduleSave();
     }
 
     function renderSidebar(jokes) {
@@ -173,6 +249,7 @@
                         '<span class="joke-block-category">' + escHtml(joke.categoria || (L.no_category || '—')) + '</span>' +
                         '<span class="joke-block-rating">' + starsHtml(joke.puntuacion) + '</span>' +
                         '<span class="joke-block-estado estado estado-' + joke.estado + '">' + estadoLabel(joke.estado) + '</span>' +
+                        (joke.duracion ? '<strong class="chiste-dur">' + durStr(joke.duracion) + '</strong>' : '') +
                     '</div>' +
                     '<div class="joke-block-text">' + escHtml(joke.texto) + '</div>' +
                     (joke.tags && joke.tags.length
@@ -271,6 +348,42 @@
             }
 
             inner.appendChild(vDiv);
+        } else if (block.type === 'bloque') {
+            const bloque = block.bloqueData;
+            const bDiv = document.createElement('div');
+            bDiv.className = 'bloque-block-content';
+
+            if (bloque) {
+                const header = document.createElement('div');
+                header.className = 'bloque-block-header';
+                const bloqueTotalSec = (bloque.chistes || []).reduce((sum, jid) => {
+                    const j = allJokes.find(x => x.id === jid);
+                    return sum + (j && j.duracion ? j.duracion : 0);
+                }, 0);
+                header.innerHTML =
+                    '<span class="bloque-block-icon">📦</span>' +
+                    '<span class="bloque-block-title">' + escHtml(bloque.titulo) + '</span>' +
+                    (bloqueTotalSec ? '<strong class="chiste-dur">' + durStr(bloqueTotalSec) + '</strong>' : '') +
+                    (bloque.descripcion ? '<span class="bloque-block-desc">' + escHtml(bloque.descripcion) + '</span>' : '') +
+                    '<a class="btn btn-ghost btn-sm bloque-block-edit-link" href="' + BASE_URL + '/bloque_editor.php?id=' + escHtml(bloque.id) + '" target="_blank">' + (L.edit || 'Editar') + ' ↗</a>';
+                bDiv.appendChild(header);
+
+                const list = document.createElement('ol');
+                list.className = 'bloque-block-joke-list';
+                (bloque.chistes || []).forEach(jokeId => {
+                    const joke = allJokes.find(j => j.id === jokeId);
+                    const li   = document.createElement('li');
+                    li.className = 'bloque-block-joke-item';
+                    li.innerHTML = joke
+                        ? parseBold(joke.texto.length > 90 ? joke.texto.slice(0, 90) + '…' : joke.texto)
+                        : '<em style="color:var(--text-muted)">' + escHtml(jokeId) + '</em>';
+                    list.appendChild(li);
+                });
+                bDiv.appendChild(list);
+            } else {
+                bDiv.innerHTML = '<em style="color:var(--text-muted)">' + (L.bloque_not_found || 'Bloque eliminado') + '</em>';
+            }
+            inner.appendChild(bDiv);
         }
 
         const actions = document.createElement('div');
@@ -392,6 +505,15 @@
                 const targetIdx = blocks.findIndex(b => b.id === block.id);
                 const insertAt  = above ? targetIdx : targetIdx + 1;
                 blocks.splice(insertAt, 0, newBlock);
+            } else if (source === 'bloque') {
+                const bloqueId = e.dataTransfer.getData('text/bloque-id');
+                const bloque   = allBloques.find(b => b.id === bloqueId);
+                if (bloque) {
+                    const targetIdx = blocks.findIndex(b => b.id === block.id);
+                    const insertAt  = above ? targetIdx : targetIdx + 1;
+                    addBloqueBlock(bloque, insertAt);
+                    return;
+                }
             }
 
             renderDocument();
@@ -426,6 +548,10 @@
             blocks.push({ id: genId(), type: 'joke', joke_id: jokeId, jokeData: joke || null });
             renderDocument();
             scheduleSave();
+        } else if (source === 'bloque') {
+            const bloqueId = e.dataTransfer.getData('text/bloque-id');
+            const bloque   = allBloques.find(b => b.id === bloqueId);
+            if (bloque) addBloqueBlock(bloque);
         }
     });
 
@@ -475,10 +601,7 @@
 
     function updateTotalDuration() {
         if (!totalDurationEl) return;
-        const total = blocks.reduce((sum, b) => {
-            if (b.type !== 'joke' || !b.jokeData) return sum;
-            return sum + (b.jokeData.duracion || 0);
-        }, 0);
+        const total = getFlatJokeBlocks().reduce((sum, item) => sum + (item.jokeData.duracion || 0), 0);
         if (total === 0) { totalDurationEl.textContent = ''; return; }
         const m = Math.floor(total / 60);
         const s = total % 60;
@@ -532,10 +655,27 @@
     }
 
     function serializeBlock(b) {
-        if (b.type === 'text')  return { id: b.id, type: 'text',  content: b.content || '' };
-        if (b.type === 'joke')  return { id: b.id, type: 'joke',  joke_id: b.joke_id, estrellas_reales: b.estrellas_reales ?? null, notas: b.notas || '' };
-        if (b.type === 'video') return { id: b.id, type: 'video', url: b.url || '' };
+        if (b.type === 'text')   return { id: b.id, type: 'text',   content: b.content || '' };
+        if (b.type === 'joke')   return { id: b.id, type: 'joke',   joke_id: b.joke_id, estrellas_reales: b.estrellas_reales ?? null, notas: b.notas || '' };
+        if (b.type === 'video')  return { id: b.id, type: 'video',  url: b.url || '' };
+        if (b.type === 'bloque') return { id: b.id, type: 'bloque', bloque_id: b.bloque_id };
         return b;
+    }
+
+    // Returns a flat list of {jokeData, estrellas_reales} for all joke-producing blocks
+    function getFlatJokeBlocks() {
+        const result = [];
+        blocks.forEach(b => {
+            if (b.type === 'joke' && b.jokeData) {
+                result.push({ jokeData: b.jokeData, estrellas_reales: b.estrellas_reales ?? null });
+            } else if (b.type === 'bloque' && b.bloqueData) {
+                (b.bloqueData.chistes || []).forEach(jokeId => {
+                    const joke = allJokes.find(j => j.id === jokeId);
+                    if (joke) result.push({ jokeData: joke, estrellas_reales: null });
+                });
+            }
+        });
+        return result;
     }
 
     function youtubeId(url) {
@@ -598,16 +738,31 @@
             lines.push('');
 
             let totalSec = 0;
-            blocks.forEach((b, i) => {
+            let jokeNum  = 0;
+            blocks.forEach(b => {
                 if (b.type === 'text') {
                     const txt = b.content.replace(/<[^>]+>/g, '').trim();
                     if (txt) lines.push('--- ' + txt + ' ---');
                 } else if (b.type === 'joke' && b.jokeData) {
-                    const dur = b.jokeData.duracion;
+                    jokeNum++;
+                    const joke = b.jokeData;
+                    const dur = joke.duracion;
                     const durStr = dur ? ' [' + Math.floor(dur/60) + 'min' + (dur%60 ? dur%60+'s' : '') + ']' : '';
                     totalSec += dur || 0;
-                    const stars = b.jokeData.puntuacion != null ? ' (' + '★'.repeat(b.jokeData.puntuacion) + ')' : '';
-                    lines.push((i + 1) + '. ' + b.jokeData.texto.slice(0, 80) + (b.jokeData.texto.length > 80 ? '…' : '') + durStr + stars);
+                    const stars = joke.puntuacion != null ? ' (' + '★'.repeat(joke.puntuacion) + ')' : '';
+                    lines.push(jokeNum + '. ' + joke.texto.replace(/\*\*/g,'').slice(0, 80) + (joke.texto.length > 80 ? '…' : '') + durStr + stars);
+                } else if (b.type === 'bloque' && b.bloqueData) {
+                    lines.push('--- ' + b.bloqueData.titulo + ' ---');
+                    (b.bloqueData.chistes || []).forEach(jokeId => {
+                        const joke = allJokes.find(j => j.id === jokeId);
+                        if (!joke) return;
+                        jokeNum++;
+                        const dur = joke.duracion;
+                        const durStr = dur ? ' [' + Math.floor(dur/60) + 'min' + (dur%60 ? dur%60+'s' : '') + ']' : '';
+                        totalSec += dur || 0;
+                        const stars = joke.puntuacion != null ? ' (' + '★'.repeat(joke.puntuacion) + ')' : '';
+                        lines.push(jokeNum + '. ' + joke.texto.replace(/\*\*/g,'').slice(0, 80) + (joke.texto.length > 80 ? '…' : '') + durStr + stars);
+                    });
                 }
             });
 
@@ -636,6 +791,12 @@
         return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
     }
 
+    function durStr(sec) {
+        if (!sec) return '';
+        const m = Math.floor(sec / 60), s = sec % 60;
+        return m + 'min' + (s ? s + 's' : '');
+    }
+
     function escHtml(s) {
         if (s == null) return '';
         return String(s)
@@ -650,6 +811,12 @@
         let s = '';
         for (let i = 1; i <= 5; i++) s += i <= n ? '★' : '☆';
         return s;
+    }
+
+    function parseBold(text) {
+        return escHtml(text)
+            .replace(/\*\*(.+?)\*\*/gs, '<strong>$1</strong>')
+            .replace(/\n?\[PAUSA\]\n?/g, '<span class="pausa-tag">— PAUSA —</span>');
     }
 
     function estadoLabel(e) {
@@ -699,27 +866,88 @@
     }
 
     function renderChart() {
-        const jokeBlocks = blocks.filter(b => b.type === 'joke' && b.jokeData);
-        const labels = jokeBlocks.map(b => {
-            const t = b.jokeData.texto || '';
-            return t.length > 22 ? t.slice(0, 22) + '…' : t;
+        // Build flat joke list AND track bloque boundary indices in one pass
+        const jokeBlocks       = [];
+        const bloqueEndIndices = []; // index of the last joke of each non-final bloque
+
+        blocks.forEach(b => {
+            if (b.type === 'joke' && b.jokeData) {
+                jokeBlocks.push({ jokeData: b.jokeData, estrellas_reales: b.estrellas_reales ?? null });
+            } else if (b.type === 'bloque' && b.bloqueData) {
+                const start = jokeBlocks.length;
+                (b.bloqueData.chistes || []).forEach(jokeId => {
+                    const joke = allJokes.find(j => j.id === jokeId);
+                    if (joke) jokeBlocks.push({ jokeData: joke, estrellas_reales: null });
+                });
+                if (jokeBlocks.length > start) {
+                    bloqueEndIndices.push(jokeBlocks.length - 1);
+                }
+            }
         });
-        const data = jokeBlocks.map(b =>
-            b.jokeData.puntuacion != null ? b.jokeData.puntuacion : null
+
+        // Don't draw a separator after the very last joke — nothing to separate
+        const separatorIndices = bloqueEndIndices.filter(idx => idx < jokeBlocks.length - 1);
+
+        // Cumulative start time for each joke (seconds)
+        let _cum = 0;
+        const cumTimes = jokeBlocks.map(item => {
+            const t = _cum;
+            _cum += item.jokeData.duracion || 0;
+            return t;
+        });
+
+        const labels = jokeBlocks.map((item, i) => {
+            const sec   = cumTimes[i];
+            const m     = Math.floor(sec / 60);
+            const s     = sec % 60;
+            const time  = m + ':' + String(s).padStart(2, '0');
+            const raw   = item.jokeData.texto.replace(/\*\*/g, '');
+            const short = raw.length > 20 ? raw.slice(0, 20) + '…' : raw;
+            return [time, short];
+        });
+        const data     = jokeBlocks.map(item =>
+            item.jokeData.puntuacion != null ? item.jokeData.puntuacion : null
         );
+        const dataReal = jokeBlocks.map(item =>
+            item.estrellas_reales != null ? item.estrellas_reales : null
+        );
+        const hasReal  = dataReal.some(v => v != null);
 
         const accent    = getStyle('--accent');
         const ok        = getStyle('--ok');
         const textMuted = getStyle('--text-muted');
         const border    = getStyle('--border');
 
-        const dataReal = jokeBlocks.map(b => b.estrellas_reales != null ? b.estrellas_reales : null);
-        const hasReal  = dataReal.some(v => v != null);
+        // Inline plugin: dashed vertical lines between bloques
+        const bloqueSeparatorPlugin = {
+            id: 'bloqueSeparators',
+            afterDraw(chart) {
+                if (!separatorIndices.length) return;
+                const ctx   = chart.ctx;
+                const xAxis = chart.scales.x;
+                const yAxis = chart.scales.y;
+                ctx.save();
+                ctx.strokeStyle = textMuted || 'rgba(150,150,150,0.7)';
+                ctx.lineWidth   = 1.5;
+                ctx.setLineDash([5, 4]);
+                separatorIndices.forEach(idx => {
+                    const x1 = xAxis.getPixelForValue(idx);
+                    const x2 = xAxis.getPixelForValue(idx + 1);
+                    const x  = (x1 + x2) / 2;
+                    ctx.beginPath();
+                    ctx.moveTo(x, yAxis.top);
+                    ctx.lineTo(x, yAxis.bottom);
+                    ctx.stroke();
+                });
+                ctx.restore();
+            },
+        };
 
         if (chartInstance) chartInstance.destroy();
 
         chartInstance = new Chart(chartCanvas, {
             type: 'line',
+            plugins: [bloqueSeparatorPlugin],
             data: {
                 labels,
                 datasets: [
@@ -769,6 +997,11 @@
                     },
                     tooltip: {
                         callbacks: {
+                            title: ctx => {
+                                const item = jokeBlocks[ctx[0]?.dataIndex];
+                                const t = (item?.jokeData?.texto || '').replace(/\*\*/g, '');
+                                return t.length > 45 ? t.slice(0, 45) + '…' : t;
+                            },
                             label: ctx => ctx.raw != null ? '★'.repeat(ctx.raw) + '☆'.repeat(5 - ctx.raw) : 'Sin puntuación',
                         },
                     },
@@ -841,6 +1074,256 @@
     const shrinkBtn = document.getElementById('chart-panel-shrink');
     if (growBtn)   growBtn.addEventListener('click',   () => setPanelHeight(currentPanelHeight() + STEP));
     if (shrinkBtn) shrinkBtn.addEventListener('click', () => setPanelHeight(currentPanelHeight() - STEP));
+
+    // ── Show Diagram ──────────────────────────────────────────
+    const diagramOverlay   = document.getElementById('diagram-overlay');
+    const diagramBody      = document.getElementById('diagram-body');
+    const diagramShowTitle = document.getElementById('diagram-show-title');
+    const diagramOpenBtn   = document.getElementById('diagram-btn');
+    const diagramCloseBtn  = document.getElementById('diagram-close');
+    const diagramPrintBtn  = document.getElementById('diagram-print');
+
+    function openDiagram() {
+        diagramShowTitle.textContent = document.getElementById('show-titulo')?.value || '';
+        diagramBody.innerHTML = buildDiagramHTML();
+        diagramOverlay.classList.add('open');
+    }
+
+    function closeDiagram() {
+        diagramOverlay.classList.remove('open');
+    }
+
+    function buildDiagramHTML() {
+        if (!blocks.length) return '<p style="color:var(--text-muted);padding:1rem 0">' + (L.player_no_jokes || 'No hay bloques') + '</p>';
+
+        let html    = '';
+        let cumSec  = 0;
+
+        blocks.forEach(block => {
+            const timeStr = fmtTime(cumSec);
+
+            if (block.type === 'joke') {
+                const joke = block.jokeData;
+                if (!joke) return;
+                const dur  = joke.duracion || 0;
+                const prev = joke.texto.replace(/\*\*/g, '').replace(/\[PAUSA\]/g, '').slice(0, 120);
+                const meta = [joke.categoria, starsHtml(joke.puntuacion)].filter(Boolean).join(' · ');
+                html += row('joke', timeStr,
+                    '🎤',
+                    '<span class="diagram-preview">' + escHtml(prev) + (joke.texto.length > 120 ? '…' : '') + '</span>' +
+                    (meta ? '<div class="diagram-meta">' + escHtml(joke.categoria || '') + (joke.puntuacion ? ' · ' + starsHtml(joke.puntuacion) : '') + '</div>' : ''),
+                    dur ? durStr(dur) : '');
+                cumSec += dur;
+
+            } else if (block.type === 'bloque') {
+                const bloque = block.bloqueData;
+                if (!bloque) return;
+                let bloqueSec = 0;
+                let jokesHtml = '';
+                (bloque.chistes || []).forEach(jid => {
+                    const j = allJokes.find(x => x.id === jid);
+                    if (!j) return;
+                    bloqueSec += j.duracion || 0;
+                    const prev = j.texto.replace(/\*\*/g, '').replace(/\[PAUSA\]/g, '').slice(0, 80);
+                    jokesHtml += '<li>' + escHtml(prev) + (j.texto.length > 80 ? '…' : '') +
+                        (j.duracion ? ' <strong style="color:var(--accent);font-size:0.7rem">' + durStr(j.duracion) + '</strong>' : '') + '</li>';
+                });
+                html += row('bloque', timeStr,
+                    '📦',
+                    '<span class="diagram-preview">' + escHtml(bloque.titulo) + '</span>' +
+                    (bloque.descripcion ? '<div class="diagram-meta">' + escHtml(bloque.descripcion) + '</div>' : '') +
+                    (jokesHtml ? '<ol class="diagram-bloque-jokes">' + jokesHtml + '</ol>' : ''),
+                    bloqueSec ? durStr(bloqueSec) : '');
+                cumSec += bloqueSec;
+
+            } else if (block.type === 'text') {
+                const raw = (block.content || '').replace(/<[^>]+>/g, '').slice(0, 80);
+                if (!raw.trim()) return;
+                html += row('text', timeStr, '📝', '<span class="diagram-preview">' + escHtml(raw) + (raw.length >= 80 ? '…' : '') + '</span>', '');
+
+            } else if (block.type === 'video') {
+                html += row('video', timeStr, '▶', '<span class="diagram-preview">' + escHtml(block.url || 'Video') + '</span>', '');
+            }
+        });
+
+        const totalHtml = cumSec
+            ? '<div style="text-align:right;font-size:0.78rem;color:var(--text-muted);padding-top:0.6rem">Total: <strong style="color:var(--accent)">' + durStr(cumSec) + '</strong></div>'
+            : '';
+        return html + totalHtml;
+    }
+
+    function row(type, time, icon, content, dur) {
+        return '<div class="diagram-row diagram-row-' + type + '">' +
+            '<span class="diagram-time">' + escHtml(time) + '</span>' +
+            '<span class="diagram-icon">' + icon + '</span>' +
+            '<div class="diagram-content">' + content + '</div>' +
+            '<span class="diagram-dur">' + escHtml(dur) + '</span>' +
+        '</div>';
+    }
+
+    function fmtTime(sec) {
+        const m = Math.floor(sec / 60), s = sec % 60;
+        return m + ':' + String(s).padStart(2, '0');
+    }
+
+    if (diagramOpenBtn)  diagramOpenBtn.addEventListener('click', openDiagram);
+    if (diagramCloseBtn) diagramCloseBtn.addEventListener('click', closeDiagram);
+    if (diagramPrintBtn) diagramPrintBtn.addEventListener('click', () => {
+        const w = window.open('', '_blank');
+        const title = document.getElementById('show-titulo')?.value || '';
+        w.document.write('<html><head><title>' + title + '</title><style>' +
+            'body{font-family:sans-serif;font-size:11pt;padding:1.5cm 2cm;max-width:700px;margin:0 auto}' +
+            '.diagram-row{display:grid;grid-template-columns:3.2rem 1.4rem 1fr auto;gap:0 0.5rem;padding:0.45rem 0;border-bottom:1px solid #e0e0e0}' +
+            '.diagram-row:last-child{border-bottom:none}' +
+            '.diagram-time{font-size:9pt;color:#888;text-align:right;padding-top:2px}' +
+            '.diagram-icon{text-align:center}' +
+            '.diagram-preview{font-size:10pt}' +
+            '.diagram-row-bloque .diagram-preview{font-weight:700;text-transform:uppercase;letter-spacing:0.04em;font-size:9pt}' +
+            '.diagram-meta{font-size:8pt;color:#888;margin-top:2px}' +
+            '.diagram-bloque-jokes{margin:4px 0 0 4px;padding-left:14px;font-size:9pt;color:#555}' +
+            '.diagram-bloque-jokes li{margin-bottom:2px}' +
+            '.diagram-dur{font-size:9pt;font-weight:700;color:#555;white-space:nowrap;padding-top:2px}' +
+            '.diagram-row-text .diagram-preview{font-style:italic;color:#888}' +
+            '</style></head><body>' +
+            '<h2 style="margin-bottom:1rem;font-size:14pt">' + title + '</h2>' +
+            diagramBody.innerHTML +
+            '</body></html>');
+        w.document.close();
+        w.focus();
+        setTimeout(() => w.print(), 400);
+    });
+    diagramOverlay.addEventListener('click', e => { if (e.target === diagramOverlay) closeDiagram(); });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && diagramOverlay?.classList.contains('open')) closeDiagram();
+    });
+    // ─────────────────────────────────────────────────────────
+
+    // ── Joke Player ───────────────────────────────────────────
+    const playerOverlay  = document.getElementById('player-overlay');
+    const playerPosEl    = document.getElementById('player-pos');
+    const playerCatEl    = document.getElementById('player-category');
+    const playerDurEl    = document.getElementById('player-dur');
+    const playerTextEl   = document.getElementById('player-text');
+    const playerBar      = document.getElementById('player-progress-bar');
+    const playerPrevBtn  = document.getElementById('player-prev');
+    const playerNextBtn  = document.getElementById('player-next');
+    const playerPlayBtn  = document.getElementById('player-playpause');
+    const playerCloseBtn = document.getElementById('player-close');
+    const playerOpenBtn  = document.getElementById('player-btn');
+
+    let playerJokes   = [];
+    let playerIndex   = 0;
+    let playerPlaying = false;
+    let playerRAF     = null;
+    let playerStart   = null;
+    let playerDurMs   = null;
+
+    function openPlayer() {
+        playerJokes = getFlatJokeBlocks();
+        if (!playerJokes.length) {
+            alert(L.player_no_jokes || 'No jokes in this show');
+            return;
+        }
+        playerIndex   = 0;
+        playerPlaying = false;
+        updatePlayBtn();
+        renderPlayerSlide();
+        playerOverlay.classList.add('open');
+    }
+
+    function closePlayer() {
+        stopProgress();
+        playerPlaying = false;
+        playerOverlay.classList.remove('open');
+    }
+
+    function renderPlayerSlide() {
+        const item = playerJokes[playerIndex];
+        const joke = item.jokeData;
+
+        playerPosEl.textContent  = (playerIndex + 1) + ' / ' + playerJokes.length;
+        playerCatEl.textContent  = joke.categoria || '';
+        playerDurEl.textContent  = joke.duracion ? durStr(joke.duracion) : '';
+        playerTextEl.innerHTML   = parseBold(joke.texto);
+        playerBar.style.width    = '0%';
+        playerBar.style.transition = 'none';
+
+        playerPrevBtn.disabled = playerIndex === 0;
+        playerNextBtn.disabled = playerIndex === playerJokes.length - 1;
+    }
+
+    function playerGoNext() {
+        stopProgress();
+        if (playerIndex < playerJokes.length - 1) {
+            playerIndex++;
+            renderPlayerSlide();
+            if (playerPlaying) startProgress();
+        } else {
+            playerPlaying = false;
+            updatePlayBtn();
+        }
+    }
+
+    function playerGoPrev() {
+        stopProgress();
+        if (playerIndex > 0) {
+            playerIndex--;
+            renderPlayerSlide();
+            if (playerPlaying) startProgress();
+        }
+    }
+
+    function togglePlay() {
+        playerPlaying = !playerPlaying;
+        updatePlayBtn();
+        if (playerPlaying) {
+            startProgress();
+        } else {
+            stopProgress();
+        }
+    }
+
+    function updatePlayBtn() {
+        playerPlayBtn.textContent = playerPlaying ? '⏸' : '▶';
+    }
+
+    function startProgress() {
+        const dur = playerJokes[playerIndex]?.jokeData?.duracion;
+        if (!dur) return; // no duration — stay on slide until manual advance
+        playerDurMs = dur * 1000;
+        playerStart = Date.now();
+
+        function tick() {
+            const pct = Math.min((Date.now() - playerStart) / playerDurMs * 100, 100);
+            playerBar.style.width = pct + '%';
+            if (pct < 100) {
+                playerRAF = requestAnimationFrame(tick);
+            } else {
+                playerGoNext();
+            }
+        }
+        playerRAF = requestAnimationFrame(tick);
+    }
+
+    function stopProgress() {
+        cancelAnimationFrame(playerRAF);
+        playerRAF = null;
+    }
+
+    if (playerOpenBtn)  playerOpenBtn.addEventListener('click', openPlayer);
+    if (playerCloseBtn) playerCloseBtn.addEventListener('click', closePlayer);
+    if (playerPrevBtn)  playerPrevBtn.addEventListener('click', playerGoPrev);
+    if (playerNextBtn)  playerNextBtn.addEventListener('click', playerGoNext);
+    if (playerPlayBtn)  playerPlayBtn.addEventListener('click', togglePlay);
+
+    document.addEventListener('keydown', e => {
+        if (!playerOverlay?.classList.contains('open')) return;
+        if (e.key === 'Escape')                          { closePlayer(); }
+        else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { playerGoNext(); }
+        else if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { playerGoPrev(); }
+        else if (e.key === ' ') { e.preventDefault(); togglePlay(); }
+    });
+    // ─────────────────────────────────────────────────────────
 
     init();
 }());

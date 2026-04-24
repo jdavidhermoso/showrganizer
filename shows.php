@@ -9,6 +9,37 @@ $gs    = new GoogleSheets();
 $shows = $gs->getAllShows();
 usort($shows, fn($a, $b) => strcmp($b['fecha_actualizacion'], $a['fecha_actualizacion']));
 
+// Build joke duration map and bloque→jokes map for show duration display
+$_durMap = [];
+foreach ($gs->getAllChistes() as $c) {
+    if (isset($c['id']) && $c['duracion'] !== null) {
+        $_durMap[$c['id']] = (int)$c['duracion'];
+    }
+}
+$_bloqueMap = [];
+foreach ($gs->getAllBloques() as $b) {
+    $_bloqueMap[$b['id']] = $b['chistes'];
+}
+
+function showDurStr(array $show, array $durMap, array $bloqueMap): string {
+    $total  = 0;
+    $blocks = $show['contenido']['blocks'] ?? [];
+    foreach ($blocks as $block) {
+        $type = $block['type'] ?? '';
+        if ($type === 'joke') {
+            $total += $durMap[$block['joke_id'] ?? ''] ?? 0;
+        } elseif ($type === 'bloque') {
+            foreach ($bloqueMap[$block['bloque_id'] ?? ''] ?? [] as $jid) {
+                $total += $durMap[$jid] ?? 0;
+            }
+        }
+    }
+    if (!$total) return '';
+    $m = intdiv($total, 60);
+    $s = $total % 60;
+    return $m . 'min' . ($s ? $s . 's' : '');
+}
+
 $page_title = t('nav_shows');
 include __DIR__ . '/includes/header.php';
 ?>
@@ -41,7 +72,7 @@ include __DIR__ . '/includes/header.php';
     <ul class="shows-list">
         <?php foreach ($shows as $show): ?>
         <li class="shows-list-item">
-            <a href="show_editor.php?id=<?= h($show['id']) ?>" class="show-title"><?= h($show['titulo']) ?></a>
+            <a href="show_editor.php?id=<?= h($show['id']) ?>" class="show-title"><?= h($show['titulo']) ?><?php $sdur = showDurStr($show, $_durMap, $_bloqueMap); if ($sdur): ?> <strong class="chiste-dur"><?= h($sdur) ?></strong><?php endif; ?></a>
             <div class="show-meta">
                 <?php
                     $meta = array_filter([$show['fecha_show'] ?? '', $show['sala'] ?? '', $show['ciudad'] ?? '']);

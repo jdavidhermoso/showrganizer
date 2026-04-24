@@ -12,6 +12,7 @@ class GoogleSheets {
 
     const COL_CHISTE = ['id','texto','categoria','puntuacion','estado','tags','fecha_creacion','fecha_actualizacion','duracion','callbacks'];
     const COL_SHOW   = ['id','titulo','contenido','fecha_creacion','fecha_actualizacion','fecha_show','sala','ciudad'];
+    const COL_BLOQUE = ['id','titulo','descripcion','chistes','fecha_creacion','fecha_actualizacion'];
 
     public function __construct() {
         session_start_safe();
@@ -323,6 +324,87 @@ class GoogleSheets {
         ];
     }
 
+    private function ensureBloquesSheet(): void {
+        $meta = $this->request('GET', self::SHEETS_BASE . '/' . urlencode($this->spreadsheetId) . '?fields=sheets.properties.title');
+        $titles = array_column(array_column($meta['sheets'] ?? [], 'properties'), 'title');
+        if (in_array('bloques', $titles, true)) return;
+
+        // Create the sheet
+        $this->request('POST', self::SHEETS_BASE . '/' . urlencode($this->spreadsheetId) . ':batchUpdate', [
+            'requests' => [['addSheet' => ['properties' => ['title' => 'bloques']]]],
+        ]);
+        // Write header row
+        $url = self::SHEETS_BASE . '/' . urlencode($this->spreadsheetId) . '/values/' . urlencode('bloques!A1') . '?valueInputOption=RAW';
+        $this->request('PUT', $url, ['values' => [self::COL_BLOQUE]]);
+    }
+
+    public function getAllBloques(): array {
+        $this->ensureBloquesSheet();
+        $rows = $this->readSheet('bloques', self::COL_BLOQUE);
+        return array_map([$this, 'parseBloque'], $rows);
+    }
+
+    public function getBloqueById(string $id): ?array {
+        $this->ensureBloquesSheet();
+        foreach ($this->readSheet('bloques', self::COL_BLOQUE) as $row) {
+            if ($row['id'] === $id) return $this->parseBloque($row);
+        }
+        return null;
+    }
+
+    public function appendBloque(array $data): string {
+        $this->ensureBloquesSheet();
+        $id  = self::uuid();
+        $now = date('c');
+        $this->appendRow('bloques', [
+            $id,
+            $data['titulo']      ?? 'Bloque sin título',
+            $data['descripcion'] ?? '',
+            json_encode($data['chistes'] ?? [], JSON_UNESCAPED_UNICODE),
+            $now,
+            $now,
+        ]);
+        return $id;
+    }
+
+    public function updateBloque(string $id, array $data): void {
+        $rows = $this->readSheet('bloques', self::COL_BLOQUE);
+        $row  = null;
+        foreach ($rows as $r) {
+            if ($r['id'] === $id) { $row = $r; break; }
+        }
+        if (!$row) throw new RuntimeException("Bloque $id no encontrado");
+
+        $this->updateRow('bloques', $row['_row'], self::COL_BLOQUE, [
+            $id,
+            $data['titulo']      ?? $row['titulo'],
+            array_key_exists('descripcion', $data) ? ($data['descripcion'] ?? '') : $row['descripcion'],
+            json_encode($data['chistes'] ?? json_decode($row['chistes'] ?: '[]', true), JSON_UNESCAPED_UNICODE),
+            $row['fecha_creacion'],
+            date('c'),
+        ]);
+    }
+
+    public function deleteBloque(string $id): void {
+        foreach ($this->readSheet('bloques', self::COL_BLOQUE) as $row) {
+            if ($row['id'] === $id) {
+                $this->deleteRow('bloques', $row['_row']);
+                return;
+            }
+        }
+    }
+
+    private function parseBloque(array $row): array {
+        return [
+            'id'                  => $row['id'],
+            'titulo'              => $row['titulo'],
+            'descripcion'         => $row['descripcion'] ?? '',
+            'chistes'             => json_decode($row['chistes'] ?: '[]', true) ?? [],
+            'fecha_creacion'      => $row['fecha_creacion'],
+            'fecha_actualizacion' => $row['fecha_actualizacion'],
+        ];
+    }
+
     public function getCategorias(): array {
         $url  = self::SHEETS_BASE . '/' . urlencode($this->spreadsheetId) . '/values/categorias!A2:A';
         $data = $this->request('GET', $url);
@@ -373,6 +455,7 @@ class GoogleSheets {
             'sheets'     => [
                 ['properties' => ['title' => 'chistes']],
                 ['properties' => ['title' => 'shows']],
+                ['properties' => ['title' => 'bloques']],
                 ['properties' => ['title' => 'categorias']],
                 ['properties' => ['title' => 'tags']],
             ],
@@ -402,6 +485,7 @@ class GoogleSheets {
         $headers = [
             'chistes'    => [['id','texto','categoria','puntuacion','estado','tags','fecha_creacion','fecha_actualizacion','duracion','callbacks']],
             'shows'      => [['id','titulo','contenido','fecha_creacion','fecha_actualizacion','fecha_show','sala','ciudad']],
+            'bloques'    => [['id','titulo','descripcion','chistes','fecha_creacion','fecha_actualizacion']],
             'categorias' => [['nombre']],
             'tags'       => [['nombre']],
         ];

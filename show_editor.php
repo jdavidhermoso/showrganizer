@@ -56,20 +56,32 @@ $html_lang  = ['es' => 'es', 'en' => 'en', 'de' => 'de'][get_lang()] ?? 'es';
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
     <aside class="editor-sidebar" id="editor-sidebar">
-        <div class="sidebar-header"><span><?= h(t('sidebar_jokes_title')) ?></span></div>
-        <div class="sidebar-filters">
-            <input type="text" id="sidebar-search" placeholder="<?= h(t('search')) ?>" class="filter-input filter-input-sm">
-            <select id="sidebar-estado" class="filter-select filter-select-sm">
-                <option value=""><?= h(t('all_statuses_short')) ?></option>
-                <option value="borrador"><?= h(t('status_draft')) ?></option>
-                <option value="desarrollo"><?= h(t('status_dev')) ?></option>
-                <option value="probado"><?= h(t('status_tested')) ?></option>
-                <option value="rotacion"><?= h(t('status_rotation')) ?></option>
-                <option value="retirado"><?= h(t('status_retired')) ?></option>
-            </select>
+        <div class="sidebar-tabs">
+            <button class="sidebar-tab active" id="tab-chistes" data-tab="chistes"><?= h(t('nav_jokes')) ?></button>
+            <button class="sidebar-tab" id="tab-bloques" data-tab="bloques"><?= h(t('nav_bloques')) ?></button>
         </div>
-        <div id="sidebar-jokes-list" class="sidebar-jokes-list">
-            <p class="sidebar-loading"><?= h(t('loading')) ?></p>
+
+        <div id="sidebar-panel-chistes">
+            <div class="sidebar-filters">
+                <input type="text" id="sidebar-search" placeholder="<?= h(t('search')) ?>" class="filter-input filter-input-sm">
+                <select id="sidebar-estado" class="filter-select filter-select-sm">
+                    <option value=""><?= h(t('all_statuses_short')) ?></option>
+                    <option value="borrador"><?= h(t('status_draft')) ?></option>
+                    <option value="desarrollo"><?= h(t('status_dev')) ?></option>
+                    <option value="probado"><?= h(t('status_tested')) ?></option>
+                    <option value="rotacion"><?= h(t('status_rotation')) ?></option>
+                    <option value="retirado"><?= h(t('status_retired')) ?></option>
+                </select>
+            </div>
+            <div id="sidebar-jokes-list" class="sidebar-jokes-list">
+                <p class="sidebar-loading"><?= h(t('loading')) ?></p>
+            </div>
+        </div>
+
+        <div id="sidebar-panel-bloques" style="display:none;flex:1;overflow-y:auto;flex-direction:column;gap:0.4rem;padding:0.5rem">
+            <div id="sidebar-bloques-list" class="sidebar-jokes-list" style="flex:1;padding:0">
+                <p class="sidebar-loading"><?= h(t('loading')) ?></p>
+            </div>
         </div>
     </aside>
 
@@ -77,6 +89,8 @@ $html_lang  = ['es' => 'es', 'en' => 'en', 'de' => 'de'][get_lang()] ?? 'es';
         <div class="doc-add-bar">
             <button class="btn btn-ghost btn-sm" id="add-text-bottom"><?= h(t('add_text')) ?></button>
             <button class="btn btn-ghost btn-sm" id="add-video-bottom"><?= h(t('add_video')) ?></button>
+            <button id="player-btn" class="btn btn-ghost btn-sm">▶ <?= h(t('player_btn')) ?></button>
+            <button id="diagram-btn" class="btn btn-ghost btn-sm">◫ <?= h(t('diagram_btn')) ?></button>
             <button id="chart-toggle" class="btn btn-ghost btn-sm" title="<?= h(t('expected_laughs')) ?>"><?= h(t('laughs')) ?></button>
             <?php if ($id): ?>
             <a href="<?= BASE_URL ?>/show_print.php?id=<?= h($id) ?>" target="_blank" class="btn btn-ghost btn-sm">PDF</a>
@@ -105,6 +119,43 @@ $html_lang  = ['es' => 'es', 'en' => 'en', 'de' => 'de'][get_lang()] ?? 'es';
         <div class="modal-actions">
             <a id="joke-popup-edit" href="" target="_blank" class="btn btn-ghost btn-sm"><?= h(t('popup_edit')) ?></a>
             <button id="joke-popup-close" class="btn btn-ghost"><?= h(t('popup_close')) ?></button>
+        </div>
+    </div>
+</div>
+
+<div id="diagram-overlay" class="diagram-overlay">
+    <div class="diagram-box">
+        <div class="diagram-header">
+            <span class="diagram-title-label" id="diagram-show-title"></span>
+            <div class="diagram-header-actions">
+                <button class="btn btn-ghost btn-sm" id="diagram-print">⎙ <?= h(t('export_text')) ?></button>
+                <button class="player-close-btn" id="diagram-close">✕</button>
+            </div>
+        </div>
+        <div class="diagram-body" id="diagram-body"></div>
+    </div>
+</div>
+
+<div id="player-overlay" class="player-overlay">
+    <div class="player-box">
+        <div class="player-topbar">
+            <span id="player-pos" class="player-pos"></span>
+            <div class="player-meta">
+                <span id="player-category" class="player-category"></span>
+                <strong id="player-dur" class="player-dur"></strong>
+            </div>
+            <button id="player-close" class="player-close-btn">✕</button>
+        </div>
+        <div class="player-body">
+            <div id="player-text" class="player-joke-text"></div>
+        </div>
+        <div class="player-progress-wrap">
+            <div id="player-progress-bar" class="player-progress-bar"></div>
+        </div>
+        <div class="player-controls">
+            <button class="player-btn" id="player-prev">←</button>
+            <button class="player-btn player-btn-play" id="player-playpause">▶</button>
+            <button class="player-btn" id="player-next">→</button>
         </div>
     </div>
 </div>

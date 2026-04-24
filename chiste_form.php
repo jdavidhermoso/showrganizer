@@ -31,6 +31,7 @@ include __DIR__ . '/includes/header.php';
         <label for="texto"><?= h(t('joke_text_label')) ?></label>
         <div class="text-toolbar">
             <button type="button" class="text-tool-btn" id="bold-btn" title="<?= h(t('bold_tooltip')) ?> (Cmd+B)"><strong>B</strong></button>
+            <button type="button" class="text-tool-btn" id="pausa-btn" title="<?= h(t('pausa_btn')) ?>">— <?= h(t('pausa_btn')) ?> —</button>
         </div>
         <textarea id="texto" name="texto" rows="8" required placeholder="<?= h(t('joke_text_ph')) ?>"><?= $chiste ? h($chiste['texto']) : '' ?></textarea>
     </div>
@@ -76,8 +77,13 @@ include __DIR__ . '/includes/header.php';
                 $durSec = $chiste ? ($chiste['duracion'] ?? null) : null;
                 $durMin = $durSec !== null ? round($durSec / 60, 1) : '';
             ?>
-            <input type="number" id="duracion" name="duracion" min="0" step="0.5"
-                   placeholder="ej. 3.5" value="<?= h((string)$durMin) ?>" class="form-input-short">
+            <div style="display:flex;align-items:center;gap:0.5rem">
+                <input type="number" id="duracion" name="duracion" min="0" step="0.5"
+                       placeholder="ej. 3.5" value="<?= h((string)$durMin) ?>" class="form-input-short">
+                <button type="button" id="estimate-duration-btn" class="btn btn-ghost btn-sm" title="<?= h(t('estimate_duration_hint')) ?>">
+                    <?= h(t('estimate_duration')) ?>
+                </button>
+            </div>
         </div>
     </div>
 

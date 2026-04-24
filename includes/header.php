@@ -8,7 +8,7 @@ $html_lang = ['es' => 'es', 'en' => 'en', 'de' => 'de'][$lang] ?? 'es';
 <html lang="<?= $html_lang ?>">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title><?= h($title) ?></title>
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/main.css">
     <link rel="manifest" href="/manifest.json">
@@ -46,6 +46,9 @@ $html_lang = ['es' => 'es', 'en' => 'en', 'de' => 'de'][$lang] ?? 'es';
         </a>
         <a href="<?= BASE_URL ?>/shows.php" class="sidebar-link <?= $current === 'shows' ? 'active' : '' ?>">
             <span class="sidebar-link-icon">🎤</span> <?= h(t('nav_shows')) ?>
+        </a>
+        <a href="<?= BASE_URL ?>/bloques.php" class="sidebar-link <?= in_array($current, ['bloques','bloque_editor']) ? 'active' : '' ?>">
+            <span class="sidebar-link-icon">📦</span> <?= h(t('nav_bloques')) ?>
         </a>
         <hr class="sidebar-sep">
         <button class="sidebar-link sidebar-theme-toggle" id="theme-toggle" aria-label="<?= h(t('dark_theme')) ?>">

@@ -29,6 +29,18 @@
     textoTA.addEventListener('keydown', function (e) {
         if (e.key === 'b' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); applyBold(); }
     });
+
+    var pausaBtn = document.getElementById('pausa-btn');
+    if (pausaBtn) pausaBtn.addEventListener('click', function () {
+        var pos    = textoTA.selectionStart;
+        var before = textoTA.value.substring(0, pos);
+        var after  = textoTA.value.substring(pos);
+        var insert = (before.length && !before.endsWith('\n') ? '\n' : '') + '[PAUSA]' + (after.length && !after.startsWith('\n') ? '\n' : '');
+        textoTA.value = before + insert + after;
+        var newPos = before.length + insert.length;
+        textoTA.setSelectionRange(newPos, newPos);
+        textoTA.focus();
+    });
     // ─────────────────────────────────────────────────────────
 
     const starsInput = document.getElementById('stars-input');
@@ -58,6 +70,23 @@
     });
 
     renderStars(currentVal);
+
+    // ── Duration estimator ────────────────────────────────────
+    // Based on ~120 wpm (comedy delivery pace with pauses and timing)
+    const estimateBtn = document.getElementById('estimate-duration-btn');
+    const durInput    = document.getElementById('duracion');
+    if (estimateBtn) {
+        estimateBtn.addEventListener('click', () => {
+            const rawText  = textoTA.value.replace(/\*\*/g, '').replace(/\[PAUSA\]/g, '').trim();
+            const words    = rawText.split(/\s+/).filter(Boolean).length;
+            if (!words) return;
+            const minutes  = words / 120;
+            // Round to nearest 0.5
+            const rounded  = Math.round(minutes * 2) / 2;
+            durInput.value = rounded > 0 ? rounded : 0.5;
+        });
+    }
+    // ─────────────────────────────────────────────────────────
 
     const tagsField  = document.getElementById('tags-field');
     const tagsHidden = document.getElementById('tags-hidden');
